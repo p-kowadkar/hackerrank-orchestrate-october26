@@ -61,7 +61,7 @@ session scratchpad. Counts are exact unless marked "approx".
    the LINK event, not the picture, decides identity.
 3. Identity links may use evidence captured after `audit_at` (case_29's audit record, +2 days; hero
    cases up to +188 days). State and citations may not. Each user has at most one visible audit record
-   (`subject_reference`); 446 of 540 deletion cases have a discoverable one and 94 have none. Resource sets
+   (`subject_reference`); 447 of 540 deletion cases have a discoverable one and 93 have none (see "Audit-record figure, reconciled" below). Resource sets
    are per case, not per user (users 07, 17, 18 each have two cases at different dates), so identity links
    must be filtered by time compatibility with the case.
 4. Residual: accounts that are gone and anonymized analytics have no identifier. Account ids come from
@@ -108,3 +108,48 @@ Details and the coverage table are in `evidence_state_catalog.md`. Image/PDF cas
 No OpenRouter key until tomorrow. An earlier test showed `openrouter.ai` returning 403 on CONNECT from the
 sandbox proxy and no `OPENROUTER_API_KEY` in the environment; it was deliberately not retested. All Phase 0
 work was done without any LLM call. When the key exists, the network policy must also allow the host.
+
+## Audit-record figure, reconciled (supersedes the earlier "94 of 540")
+The earlier figure had two separate problems, neither of which was a bug in the identity resolver.
+- It came from the full resolver, not from the one-off check that printed `None` for case_93. That check was
+  a different script that looked up *current* emails only. The headline was re-derived by two independent
+  implementations (structured-record linking and raw-text trace/block linking). Both gave 446 linked / 94 none,
+  and all 540 deletion-case users resolve.
+- It skipped PDFs and `LINK_RESOURCE_IDENTITY` events. Adding them moves case_45 (`audit_record_003`) into
+  the discoverable set. **Corrected figure: 447 discoverable, 93 not discoverable (540 deletion cases).**
+
+What the 93 are:
+- 8 early hero samples (01, 02, 04, 05, 06, 07, 08, 10): the golden answers contain no audit step, so nothing
+  is missing.
+- 2 samples with a golden audit step whose id is in no participant file: case_18 (`audit_record_6645`) and
+  case_20 (`audit_record_5569`). 22 of the 24 sample answers that contain an audit step are discoverable.
+- 83 eval cases with no golden to compare against. They cluster in 14 batches/families (the typed-inventory
+  and image-aligned batches: 02-13, 03-10, 04-04, 04-29, 05-24, 05-29, 06-18, 07-13, 07-18, 08-07, 09-01,
+  09-26 and the two image singletons), where the home file lists audit records only for decoy users.
+  Whether their golden answers contain an audit step is unknown, so they are an unknown, not an error rate.
+- Every user has at most one audit record anywhere in the data.
+
+Discoverable does not mean usable at any lag. Among the 424 eval cases that have a link, the distance from `audit_at` to the nearest file that links the
+user to an audit record is: 299 within 1 day before or after, 1 between 1 and 14 days before, 95 within 1-3 days
+after, 8 within 3-7 days after, 14 within 7-30 days after, 7 beyond 30 days after (hero cases, up to 188 days). The 7-day lags are the ledger-style
+bundles (`evidence_22`, `evidence_31`, `evidence_45`), which are exported a week after the batch they describe.
+A case-scoping window therefore needs to reach about 8 days past `audit_at`; a 3-day window would drop
+21 ordinary cases.
+
+## Task D: NOT_APPLICABLE, result
+- Cases: 518 eval. Classified as deletion requests: 508. Difference: 10. `CLASSIFY_REQUEST` events: 10.
+  `518 - 508 = 10 = 10` holds. All 550 cases (samples included): 550 - 540 = 10 as well; every sample answer
+  is a deletion case.
+- Each event is keyed by an account id. `security_audit_ledger_20261001.json` maps those ten ids to ten emails;
+  each email is the sole request email of one of `case_533`..`case_542`, and the set of mapped cases equals the
+  set of cases whose text is non-deletion. All ten texts are non-deletion (phone change, invoice copy,
+  data copy, email change, login help, promo opt-out, marketing opt-out, surname fix, portable download,
+  information request).
+- Every event falls after `requested_at` and before `audit_at` of its case. The events are identical in wording
+  ("... non-deletion; no destructive action was authorized"), have no other activity on those accounts, and the
+  ledger lists all ten accounts as still FOUND, which is correct for non-deletion.
+- The ledger is captured 2026-10-01, after nine of the ten audit dates, so the account-to-email link is
+  identity-only. The text, not the event, is the primary signal; the event is corroboration.
+- A careless negation list mislabels real deletion requests: a throwaway regex using "only" as a negation cue
+  flagged 3 sample deletion texts as non-deletion ("keep only the reference needed ..."). The production
+  classifier must treat negation narrowly and send conflicts to the LLM fallback rather than guess.

@@ -68,7 +68,7 @@ Backends (selected by `--llm` or `LLM_MODE`, default `replay`):
 Fixture format is Markdown (the code judge ignores raw `.json`): a small header (`step`, `input_ref`,
 `input_sha`, `schema_version`, `origin`, `model`, `recorded_at`, optional `usage`) followed by one fenced
 JSON block. Rules enforced by a test:
-- `origin: transcribed` fixtures (written by me from `notes/evidence_artifacts.md`, not by a model) may not
+- `origin: transcribed` fixtures (written by me from `code/notes/evidence_artifacts.md`, not by a model) may not
   contain a `usage` field.
 - Only `origin: live` / `recorded` results contribute to token totals.
 - A fixture's key ignores prompt wording, so editing a prompt does not silently invalidate fixtures;
@@ -145,7 +145,7 @@ The hidden grader's weights are unknown, so the scorer reports each component se
    the right metric; 550/550 request emails resolve; ordering/JSON tests.
 2. **Evidence ingestion.** Per-format parsers into `Observation`, with a coverage report (every file
    parses; no state-bearing log event dropped). PDFs via `pdftotext`; screenshots via `replay` fixtures
-   transcribed from `notes/evidence_artifacts.md`.
+   transcribed from `code/notes/evidence_artifacts.md`.
 3. **Linking and state.** Clock rules, latest-wins, replica diff, readback over claims. Report found-resource
    precision/recall and state accuracy on the samples.
 4. **Residual matching and citation.** Accounts/analytics matching, citation rule, absence-proof rule. Report
@@ -163,7 +163,7 @@ Sprints 1-5 need no network. Sprint 6 is the only one blocked on the API key.
 
 ## Risks I cannot remove from the samples
 - About 22% of account ids stay ambiguous after matching (two or three candidates).
-- Some ids appear in no file (3 of ~130 in samples; 94 of 540 deletion cases have no discoverable audit record).
+- Some ids appear in no file (3 of ~130 in samples; 93 of 540 deletion cases have no discoverable audit record, 8 of which are expected).
 - Eight format variants have no sample truth: three replica layouts (reporting, regional, failover-generic)
   and five log dialects (pipe, bracket, syslog, JSON lines, cloud-runtime).
 - Legal-hold step shape, `object_storage` / `marketing_platform` / `legal_service` system ids, DELETION_PENDING,
