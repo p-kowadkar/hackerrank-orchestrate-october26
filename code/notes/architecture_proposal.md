@@ -1,4 +1,4 @@
-# Architecture proposal (design only, nothing built yet)
+# Architecture (Sprint 1 built: `code/ghostaudit`; the LLM layer in `code/llm/` is still design only)
 
 ## Principles
 1. Decisions are deterministic: identity, linking, state at `audit_at`, policy, ordering, JSON.
@@ -114,22 +114,23 @@ case row -> intent (lexicon / events / LLM) -> NOT_APPLICABLE shortcut: "[]"
 Layout (Python, entry `python3 code/main.py`):
 
 ```
-code/main.py                   CLI: --llm {replay,live,record,off} --dataset dataset --out output.csv
-code/audit/{io,identity,intent,linking,state,policy,planner,output}.py
-code/audit/evidence/{logs,sql,json_records,ledger,pdf,screenshots}.py   -> Observation
-code/llm/{interface,replay,openrouter,usage}.py     code/llm/fixtures/<step>/*.md
-code/prompts/{screenshot_transcribe,intent_classify}.md
-code/evaluation/{score.py, evaluation_report.md, usage_report.md, usage_ledger.md}
-code/tests/                    offline, replay-backed
+code/main.py                   CLI: --dataset dataset --out output.csv --ambiguity {hybrid,guess,omit}
+code/ghostaudit/{data,paths,timeutil,tokens,identity,intent,model,state,residual,planner,pipeline,output,report}.py
+code/ghostaudit/evidence/{common,structured,logs,documents}.py   -> Obs (clock-checked observations)
+code/llm/{interface,replay,openrouter,usage}.py     code/llm/fixtures/<step>/*.md      (Sprint 4, not built)
+code/prompts/{screenshot_transcribe,intent_classify}.md                                (Sprint 4, not built)
+code/evaluation/{score.py,main.py,identity_backtest.py,derived_cases.md,sample_scorecard.md,run_report.md}
+code/evaluation/{evaluation_report.md,usage_report.md}                                 (Sprint 6)
+code/tests/                    offline unit tests, run with python3 -m unittest discover -s code/tests -t code
 ```
 
 Notes:
 - "Parsed once" means one `EvidenceIndex` per run (about 1.2 MB of evidence, seconds to build). There is no
   persisted evidence cache; only LLM answers are cached (as fixtures).
 - Linking and state are separate modules on purpose: identity may use any capture date, state may not.
-- Residual id matching (accounts and anonymized analytics) is a scored, explainable step: window, exclusion
-  of resources owned by others, `reported_status` <-> worker-result agreement, then propagation. Ambiguous
-  results are logged with their candidate lists rather than hidden.
+- Residual id matching (accounts and anonymized analytics) is an explainable step, documented in
+  `residual_identity.md`: evidence, elimination, a counted last-resort `reported_status` <-> worker-result
+  tiebreak, then the hybrid guess-or-omit policy. Every decision records how it was reached.
 - Output is built from sorted tuples with a fixed key function; JSON is dumped with sorted keys.
 
 ## Scorer (built first)
