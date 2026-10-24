@@ -69,3 +69,25 @@ branch=main
 repo_root=/home/user/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T18:52:08Z] Phase 0 continued: read images/PDFs, notes, LLM interface
+
+User Prompt (verbatim, secrets redacted):
+Oh, and btw, no OpenRouter key until tomorrow. Skip the connectivity test and don't wait on it. Continue Phase 0 (tasks A to E) without any LLM API calls. Open and read the 11 images and 4 PDFs yourself and write what you find into a markdown notes file (.md, not .json, since the code judge ignores raw data files). In the architecture proposal, put every LLM step behind a small interface, so it can run offline against stored sample responses now and against OpenRouter once the key exists. Don't invent token counts or costs. Those come only from real calls.
+
+Agent Response Summary:
+Skipped the connectivity test and made no LLM calls. Read all 11 screenshots and 4 PDFs myself and wrote notes/evidence_artifacts.md (what each shows, subject vs decoy rows, LINK events, derived expectations for the 12 image/PDF cases, clearly marked unverified). Added notes/evidence_state_catalog.md (clock rules, per-format state signals, batch structure), notes/hand_traces.md (13 traced sample cases) and notes/architecture_proposal.md, where both LLM steps sit behind one interface with replay/live/record/off backends, markdown fixtures that never carry usage unless a real call produced it, and a ledger for real-call usage only. Key new findings: eval batches share one home evidence file each, planted later records and stale snapshots exist, and resource sets are per case rather than per user.
+
+Actions:
+* viewed all 11 PNGs and ran pdftotext/pdfinfo on all 4 PDFs
+* wrote throwaway probes in the session scratchpad (not the repo) for hero users, batch/home-file mapping, audit-record linkage, log event vocabulary, bundle snapshot clocks, ledger repeat observations
+* created notes/evidence_artifacts.md, notes/evidence_state_catalog.md, notes/hand_traces.md, notes/architecture_proposal.md; edited notes/phase0_findings.md
+* get_session to confirm the serving model; no network calls to openrouter.ai
+
+Context:
+tool=Claude Code
+model=claude-sonnet-5-5
+branch=main
+repo_root=/home/user/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

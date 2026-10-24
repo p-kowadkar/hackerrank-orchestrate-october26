@@ -59,7 +59,11 @@ session scratchpad. Counts are exact unless marked "approx".
    7m01s of exactly one image/PDF and names the subject's resource, email and user. Screenshots also
    contain decoys. The marketing screenshot shows a person who exists nowhere in `user_identities`, so
    the LINK event, not the picture, decides identity.
-3. Identity links may use evidence captured after `audit_at` (case_29's audit record). State may not.
+3. Identity links may use evidence captured after `audit_at` (case_29's audit record, +2 days; hero
+   cases up to +188 days). State and citations may not. Each user has at most one visible audit record
+   (`subject_reference`); 446 of 540 deletion cases have a discoverable one and 94 have none. Resource sets
+   are per case, not per user (users 07, 17, 18 each have two cases at different dates), so identity links
+   must be filtered by time compatibility with the case.
 4. Residual: accounts that are gone and anonymized analytics have no identifier. Account ids come from
    `DELETE_RECORD -> account_service` worker events (539 of them, ~1:1 with deletion cases). For
    generated families the true event is 45-74 min before `reported_at`. The worker result also tracks
@@ -77,14 +81,30 @@ session scratchpad. Counts are exact unless marked "approx".
 - The other 4 are absence proofs: 3 follow "latest snapshot of the owning system <= audit_at".
   Case_04 cites `evidence_54` although the later scope-only snapshot `evidence_90` also proves absence.
 
+## Time traps found (full rules in `evidence_state_catalog.md`)
+- Files gate on manifest `captured_at`; records inside a usable file gate on their own timestamp. Planted
+  later records exist (case_383, case_135). Stale older snapshots sit next to fresh ones in bundles.
+- Case_34: older log says 404, newer screenshot shows the account live, so the newest direct evidence wins.
+- Case_26/27: a bundle holds a stale 09-09 snapshot (account_5684 ACTIVE) and a post-audit 09-17 snapshot
+  (account_3866 ACTIVE); the golden answers ignore both and follow the 09-15 readbacks.
+
+## Batch structure
+Eval cases come in 46 batches of 10 (about 5 days apart), each served by one home evidence file in one of
+about nine rotating formats, plus late bundles. Six families have sample truth. Eight variants have none:
+three replica layouts (reporting, regional, failover-generic) and five log dialects (pipe, bracket, syslog,
+JSON lines, cloud-runtime). Ledger-style logs/manifests are covered only by the handover text.
+Details and the coverage table are in `evidence_state_catalog.md`. Image/PDF cases are in
+`evidence_artifacts.md`.
+
 ## Unknown / not testable from samples
-- Legal-hold handling (no sample has `legal_service`; appears only in eval-only evidence).
-- State rules for the 11 image families and regional/reporting replicas (eval-only).
+- Legal-hold handling (no sample has `legal_service`; appears only in eval-only evidence). The legal
+  register PDF lists six sample users yet no sample answer has a legal step.
+- State rules for regional/reporting/failover-generic replicas and the non-key=value log dialects.
+- `system_id` for object storage, marketing and legal records; DELETION_PENDING; expired exports.
 - Grader weighting and tie-break order for `resource_id`.
 - The challenge end time is not configured in the repo.
 
-## Environment blocker
-`openrouter.ai` is denied by the sandbox network policy (proxy returns 403 on CONNECT) and
-`OPENROUTER_API_KEY` is not set. No LLM call has been possible. Fix: add `openrouter.ai` to the
-environment's allowed domains, then set the key as a network secret for that host or as
-`OPENROUTER_API_KEY`.
+## Environment
+No OpenRouter key until tomorrow. An earlier test showed `openrouter.ai` returning 403 on CONNECT from the
+sandbox proxy and no `OPENROUTER_API_KEY` in the environment; it was deliberately not retested. All Phase 0
+work was done without any LLM call. When the key exists, the network policy must also allow the host.
