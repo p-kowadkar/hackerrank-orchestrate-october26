@@ -40,6 +40,39 @@ python3 code/main.py
 The blank template at `dataset/output.csv` is provided as a reference. Your final generated file for submission must be the root-level `output.csv`.
 
 
+## Running this solution
+
+Requirements: Python 3.9+ and one small dependency (`pypdf`, pure Python, used to read the four PDFs).
+
+```bash
+pip install -r code/requirements.txt
+python3 code/main.py                       # reads dataset/, writes output.csv (518 rows) at the repository root
+python3 code/evaluation/main.py            # scores the 32 samples, writes code/evaluation/sample_scorecard.md
+python3 -m unittest discover -s code/tests -t code     # offline test suite
+```
+
+On Windows use `py -3` instead of `python3`; nothing here depends on bash. Paths are resolved from the location
+of the code, so any checkout folder name works.
+
+`output.csv` rows are in natural numeric order of `case_id` (`case_33` before `case_100`, the order of
+`deletion_requests.csv`). The brief says "sorted by case_id" without defining the order, so this is a stated
+assumption.
+
+How it works, in one paragraph: identity resolution (current and historical emails, hashes, phones) -> request
+intent (multilingual, negation-aware) -> every evidence file is parsed once into time-stamped observations ->
+resources are linked to the case through identity tokens inside a time window -> the state of each resource at
+`audit_at` is the newest admissible observation (a file or a record dated after `audit_at` is never used; claims in
+`system_activity.csv` are hints, never proof) -> `deletion_rules.csv` maps each record type to its action -> steps
+are ordered and cited deterministically. Design notes, the evidence catalogue and the sprint plan are in
+`code/notes/`. Reports are in `code/evaluation/`.
+
+LLM use and API keys: the current core is fully deterministic and makes no network calls. The planned LLM steps
+(reading the 11 screenshots, and a fallback for unclassifiable request text) go through one interface in
+`code/llm/` that can replay stored responses offline or call OpenRouter. The live backend reads the key from the
+`OPENROUTER_API_KEY` environment variable and defaults to a placeholder; **outside the development sandbox a real
+OpenRouter key must be exported before running with `--llm live`.** No key is stored in this repository. Token and
+cost figures in `usage_report.md` come only from real API responses.
+
 ## Dataset
 
 All participant-facing files are in `dataset/`:
