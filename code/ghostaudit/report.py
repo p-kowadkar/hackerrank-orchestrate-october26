@@ -23,6 +23,17 @@ def run_report(run: RunResult, title: str = "Run report") -> str:
         lines += ["| case | candidates before | after | resolved |", "|---|---|---|---|"]
         lines += [f"| {u.case_id} | {', '.join(u.before)} | {', '.join(u.after)} | {'yes' if u.resolved else 'no'} |" for u in uses]
         lines.append("")
+    ahow = Counter(a.how for a in run.analytics.values())
+    lines += ["## Anonymized analytics identity (no identifier in evidence)", ""]
+    lines += [f"- resolved by {k}: {v}" for k, v in sorted(ahow.items())] or ["- none needed"]
+    cuses = run.cadence_uses
+    lines += ["", "## Worker-cadence heuristic uses", "",
+              f"- learned gaps (seconds): {', '.join(str(g) for g in sorted(run.cadence)) or 'none'}",
+              f"- uses: {len(cuses)}; narrowed to one profile: {sum(1 for u in cuses if len(u.after) == 1)}", ""]
+    if cuses:
+        lines += ["| case | candidates before | after |", "|---|---|---|"]
+        lines += [f"| {u.case_id} | {', '.join(u.before)} | {', '.join(u.after)} |" for u in cuses]
+        lines.append("")
     tot = Counter()
     for fid, c in run.index.stats.items():
         tot.update(c)

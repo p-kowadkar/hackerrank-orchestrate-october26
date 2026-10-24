@@ -53,7 +53,7 @@ and 5 minutes after `reported_at`, be observed as anonymized in admissible evide
 For cases with directly linked compliant siblings (support, flow, backup, tombstone), the worker emits events on a
 fixed cadence (gaps of 390 s and 449 s, learned from directly linked siblings and accepted only after at least five
 occurrences). The analytics event must sit one, two or three cadence steps before the first sibling event. This is
-a pattern learned from the data, not a documented rule, so it is reported separately (`run_report.md`, cadence uses)
+a pattern learned from the data, not a documented rule, so it is reported separately (`run_report.md`, "Worker-cadence heuristic uses")
 and can be switched off with `PlanOptions(use_cadence=False)`.
 
 ## Assumptions to confirm

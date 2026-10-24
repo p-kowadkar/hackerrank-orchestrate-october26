@@ -140,6 +140,33 @@ Ambiguity policy: `hybrid`. `guess` = deterministic pick among candidates; `ambi
 | case_547 | account_294, account_8832, account_7015, account_410, account_9155 | account_7015, account_410, account_9155 | no |
 | case_548 | account_294, account_8832, account_7015, account_410, account_9155 | account_7015, account_410, account_9155 | no |
 
+## Anonymized analytics identity (no identifier in evidence)
+
+- resolved by elimination: 101
+- resolved by guess: 24
+
+## Worker-cadence heuristic uses
+
+- learned gaps (seconds): 390, 449
+- uses: 14; narrowed to one profile: 14
+
+| case | candidates before | after |
+|---|---|---|
+| case_26 | analytics_1895, analytics_4566 | analytics_4566 |
+| case_27 | analytics_4574, analytics_6077 | analytics_4574 |
+| case_28 | analytics_4574, analytics_6077 | analytics_6077 |
+| case_44 | analytics_9406, analytics_5589 | analytics_5589 |
+| case_57 | analytics_2572, analytics_8858 | analytics_8858 |
+| case_112 | analytics_800, analytics_9875 | analytics_9875 |
+| case_151 | analytics_7254, analytics_1626 | analytics_1626 |
+| case_155 | analytics_7372, analytics_8425 | analytics_7372 |
+| case_233 | analytics_6723, analytics_8565 | analytics_6723 |
+| case_235 | analytics_6723, analytics_8565 | analytics_8565 |
+| case_277 | analytics_5923, analytics_6191 | analytics_6191 |
+| case_308 | analytics_096, analytics_3678 | analytics_096 |
+| case_326 | analytics_9681, analytics_2072 | analytics_2072 |
+| case_532 | analytics_3744, analytics_893 | analytics_3744 |
+
 ## Evidence parsing
 
 - observations: 2522; records parsed: 2898; noise events ignored: 1142; unrecognised: 0; files skipped (screenshots): 11
