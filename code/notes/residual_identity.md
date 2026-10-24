@@ -59,6 +59,6 @@ and can be switched off with `PlanOptions(use_cadence=False)`.
 ## Assumptions to confirm
 
 - Output rows are sorted in natural numeric order (`case_33` before `case_100`); the samples are sorted that way.
-- Legal-hold records, `DELETION_PENDING` exports and expired exports have no sample truth; the current treatment is in
+- Legal-hold records, `DELETION_PENDING` exports and expired exports have no sample truth; they are listed as open questions in
   `evidence_state_catalog.md`.
 - `system_id` for object-storage, marketing and legal records follows the id prefix; no sample covers them.
