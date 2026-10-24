@@ -9,3 +9,63 @@ Parent Agent: none
 Language: py
 Time Remaining: not configured
 
+
+## [2026-10-24T18:38:01Z] Phase 0: investigate dataset and plan (no solution code)
+
+User Prompt (verbatim, secrets redacted):
+Read AGENTS.md first and follow its logging rules exactly. Then read problem_statement.md and README.md.
+
+PHASE 0 ONLY: investigate and plan. No solution code until I approve your plan. Don't assume anything I haven't said, and ask if something is unclear. The end time isn't in the repo, so don't invent one.
+
+GIT RULES (every commit and PR in this session):
+- Do NOT add yourself as co-author. No "Co-Authored-By" trailer and no "Generated with Claude Code" line in commits or PR bodies.
+- Your first action: create .claude/settings.json with {"attribution": {"commit": "", "pr": ""}} (merge into the file if it exists) and commit it.
+- Regardless of that setting, run git log -1 --format=%B after every commit. If a trailer slipped in, amend it out before pushing. Never push a commit that has one.
+- Work from main. If you need another branch, tell me its name first. Ignore the agent-trace, fix/agent-trace-instructions and fix/readme-packaging branches. Don't open PRs.
+- Commit and push log.txt every few turns, since this sandbox can die.
+
+ENVIRONMENT:
+- Cloud sandbox. I'm on a phone with no laptop.
+- LLM calls go through OpenRouter: OpenAI-compatible SDK, base_url="https://openrouter.ai/api/v1". The key is set up either as a network secret for openrouter.ai (the proxy adds the Authorization header, so the key never enters the VM) or as OPENROUTER_API_KEY. Test the secret route first: one tiny chat completion to a cheap model with no Authorization header. If the SDK insists on a key, pass a placeholder and confirm the proxy still injects the real one. If that fails, check whether OPENROUTER_API_KEY is set (without printing it). If neither works, tell me and wait.
+- Never print, echo, log, write to a file or commit any key, and never ask me to paste one into chat. Code reads os.environ.get("OPENROUTER_API_KEY", "placeholder"). README must say a real key is needed outside this sandbox.
+- Record per-call token usage and cost from the response from day one, because usage_report.md needs the final-run numbers.
+
+I did a rough pass in another chat. Treat these as claims to verify, not facts:
+1. reported_status is noise. NOT_STARTED cases 25, 26, 28 are COMPLETE in sample_output; several "COMPLETE" cases are INCOMPLETE.
+2. Ghost mechanism (case_05): the log says DELETE_RECORD SUCCESS on account_005, then a SYNC_RECORD to the failover replica. The failover SQL snapshot (evidence_54) still holds the row while its primary table doesn't. Core move looks like diffing primary vs replica tables in each snapshot.
+3. Readback beats log (case_25): the log says DELETE_RECORD FAILED on account_3136, but the later JSON readback (evidence_92) shows a 404/null profile, so it's gone. Fresh direct evidence seems to override log claims in both directions.
+4. Verification steps seem to list the end state of every relevant resource, not just the ones we fixed (case_13).
+5. NOT_APPLICABLE has zero sample examples. system_activity.csv has ~10 CLASSIFY_REQUEST events ("non-deletion") keyed by account resource_id.
+6. OPEN: I couldn't find what links a user (email/user_id) to resources like account_3136 or analytics_1895 once identifiers are nulled. I haven't opened the 11 images or 4 PDFs.
+7. OPEN: which evidence file to cite for COMPLETE cases (latest capture before audit_at covering that system?).
+
+Phase 0 tasks:
+A. Hand-trace 6+ diverse sample cases (COMPLETE, INCOMPLETE, and 11+ step ones) with a throwaway script until you can explain exactly how each expected output follows from the data.
+B. Crack the user-to-resource linkage. Check the images, PDFs, LINK_RESOURCE_IDENTITY events and user_audit_log.
+C. Work out the evidence-citation rule and how to resolve state at audit_at.
+D. Find the real NOT_APPLICABLE signal.
+E. Propose an architecture. My bias: deterministic code for identity, rules, ordering and JSON; evidence parsed once and cached; an LLM only for images/PDFs and request-intent classification; a scorer built first against the 32 samples. Challenge this if you disagree.
+
+Constraints: Python. Use only dataset/. Prompts live in source or .md files. Small, testable sprints.
+
+Finish with a short report: what you verified, what you refuted, what's still unknown, and a sprint plan. Then wait for me.
+
+Agent Response Summary:
+Created .claude/settings.json (empty attribution) and worked on main as instructed. OpenRouter is unreachable: the sandbox proxy returns 403 on CONNECT to openrouter.ai and OPENROUTER_API_KEY is not set, so no LLM call was possible and the user must allow the host. Hand-traced samples 01, 02, 05, 09, 10, 11, 19, 24, 25, 26-30, 32 with throwaway probes and measured the linkage, citation and NOT_APPLICABLE rules against all 32 sample answers. Verified claims 1-5 and 7, answered 6 for most resources, and recorded the findings in notes/phase0_findings.md. No solution code written; the plan and open questions go to the user.
+
+Actions:
+* created .claude/settings.json and committed it; verified no trailer with git log -1 --format=%B
+* created log.txt (SESSION START) and pushed main to origin
+* tested openrouter.ai via curl with no Authorization header (HTTP 403 on CONNECT), checked OPENROUTER_API_KEY presence without printing it, read environment docs
+* read problem_statement.md, README.md, AGENTS.md rules, agent_trace_instructions.md
+* wrote throwaway probes in the session scratchpad (not in the repo) to parse every evidence format and test linkage, citation, ordering and matching hypotheses
+* viewed all 11 images and extracted the 4 PDFs with pdftotext
+* wrote notes/phase0_findings.md
+
+Context:
+tool=Claude Code
+model=claude-sonnet-5-5
+branch=main
+repo_root=/home/user/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
