@@ -51,6 +51,21 @@ python3 code/evaluation/main.py            # scores the 32 samples, writes code/
 python3 -m unittest discover -s code/tests -t code     # offline test suite
 ```
 
+Options and evaluation tools (all offline):
+
+```bash
+python3 code/main.py --ambiguity hybrid|guess|omit     # what to do when an account stays ambiguous (default hybrid)
+python3 code/main.py --no-tiebreak --no-cadence        # switch off the two dataset-specific heuristics
+python3 code/evaluation/custom_cases.py                # hand-built evaluation cases -> custom_cases_results.md
+python3 code/evaluation/coverage.py                    # per-format coverage and consistency -> coverage_report.md
+python3 code/evaluation/identity_backtest.py           # backtests of the residual matching -> residual_backtest.md
+python3 code/evaluation/results_table.py --write       # refreshes the tables in evaluation_report.md
+```
+
+The two heuristics (`reported_status` against worker result, and the worker cadence for anonymized analytics profiles)
+exploit how this dataset was built, are only ever used after evidence has failed to decide, and are counted in
+`code/evaluation/run_report.md`; `code/evaluation/evaluation_report.md` section 6 describes and backtests them.
+
 On Windows use `py -3` instead of `python3`; nothing here depends on bash. Paths are resolved from the location
 of the code, so any checkout folder name works.
 

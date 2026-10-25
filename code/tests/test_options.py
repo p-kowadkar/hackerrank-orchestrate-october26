@@ -51,6 +51,20 @@ class SwitchTests(unittest.TestCase):
                 if a.how == "ambiguous":
                     self.assertGreaterEqual(len(a.candidates), 3, cid)
 
+    def test_every_residual_candidate_is_verified_absent(self):
+        """Why the choice cannot matter: a candidate that no evidence names has no admissible observation, so it is absent."""
+        from ghostaudit.state import decide
+        res = go(ambiguity="hybrid")
+        reqs = {r.case_id: r for r in dataset().all_requests}
+        checked = 0
+        for cid, a in res.assignments.items():
+            if a.how in ("guess", "ambiguous"):
+                for cand in a.candidates:
+                    d = decide(res.index, cand, reqs[cid].audit_at)
+                    self.assertFalse(d.violating, (cid, cand))
+                    checked += 1
+        self.assertGreater(checked, 100)
+
     def test_candidate_choice_never_changes_a_verdict(self):
         """Residual accounts are verified absent whichever candidate is picked, so omit/hybrid/guess agree on every verdict."""
         base = verdicts(go(ambiguity="hybrid"))
