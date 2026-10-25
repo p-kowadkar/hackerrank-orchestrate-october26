@@ -4,6 +4,12 @@ I opened all 11 PNGs and extracted all 4 PDFs (`pdftotext -layout`) myself. This
 actually in them. Anything marked **derived** is my reading of the rules, not ground truth: none of
 these cases has a sample answer.
 
+Correction found while re-reading the images for the transcription fixtures (Sprint 4): in two screenshots the shaded
+table row is **not** the record the detail panel describes (`evidence_23`: row 1 `export_1261` is shaded but the panel is
+`export_1260`; `evidence_32`: row 1 `backup_9291` is shaded but the panel is `backup_9287`). The detail panel decides which
+record is selected; earlier notes that say "selected" for those rows mean the detail-panel record. Structured transcriptions of
+all 11 screenshots are in `code/llm/fixtures/transcribed/screenshot_transcribe/`.
+
 Common facts:
 - Every PNG is a clean, machine-rendered UI screenshot (no PNG metadata, no noise). Width 1800 px
   except `marketing_profile_console.png` (1500 px). Each shows a "Northstar Shop" header, a left nav,

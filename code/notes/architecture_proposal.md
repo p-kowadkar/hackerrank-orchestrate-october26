@@ -1,4 +1,4 @@
-# Architecture (Sprint 1 built: `code/ghostaudit`; the LLM layer in `code/llm/` is still design only)
+# Architecture (built: `code/ghostaudit` core and `code/llm` offline layer; the live backend exists but has never been called)
 
 ## Principles
 1. Decisions are deterministic: identity, linking, state at `audit_at`, policy, ordering, JSON.
@@ -117,8 +117,8 @@ Layout (Python, entry `python3 code/main.py`):
 code/main.py                   CLI: --dataset dataset --out output.csv --ambiguity {hybrid,guess,omit}
 code/ghostaudit/{data,paths,timeutil,tokens,identity,intent,model,state,residual,planner,pipeline,output,report}.py
 code/ghostaudit/evidence/{common,structured,logs,documents}.py   -> Obs (clock-checked observations)
-code/llm/{interface,replay,openrouter,usage}.py     code/llm/fixtures/<step>/*.md      (Sprint 4, not built)
-code/prompts/{screenshot_transcribe,intent_classify}.md                                (Sprint 4, not built)
+code/llm/{interface,off,replay,openrouter,record,factory,fixtures,schemas,prompts,reader,compare,manifest,offline,usage}.py
+code/llm/fixtures/{transcribed,recorded}/<step>/<key>.md   code/prompts/{screenshot_transcribe,intent_classify}.md
 code/evaluation/{score.py,main.py,identity_backtest.py,derived_cases.md,sample_scorecard.md,run_report.md}
 code/evaluation/{evaluation_report.md,usage_report.md}                                 (Sprint 6)
 code/tests/                    offline unit tests, run with python3 -m unittest discover -s code/tests -t code

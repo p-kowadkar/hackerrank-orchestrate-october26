@@ -59,7 +59,7 @@ or genuinely ambiguous) or as an open question; tiebreak-use counts.
 - At least three additional evaluation cases built by hand from data we can verify structurally.
 Deliverable: coverage report (per format: files, records, observations, unparsed lines = 0) and consistency tests.
 
-## Sprint 4: LLM interface, screenshots and the 12 image/PDF cases
+## Sprint 4: LLM interface, screenshots and the 12 image/PDF cases (offline part DONE; live part waits for the key and the owner's go)
 - `code/llm/` with replay/live/record/off backends, prompts as Markdown, Markdown fixtures, usage ledger.
 - Screenshot reader and fixtures transcribed from `evidence_artifacts.md` (labelled `transcribed`, no usage).
 - Intent fallback behind the same interface (expected to fire rarely).
@@ -77,3 +77,12 @@ usage report states that no live run happened.
   tiebreak counts, guess-versus-omit result), `usage_report.md` from real calls only, README with setup/run and the
   statement that a real key is needed outside this sandbox, `code.zip` dry run, final `output.csv`.
 Deliverable: packaged zip passes a structural check (no dataset, no secrets, no nested archives, reports present).
+
+
+## Sprint 4 status (after the Sprint 3 review)
+Done offline: `code/llm/` (interface, off/replay/live/record, validators, ledger, prompts, comparison tool), the structured
+screenshot schema and state mapping (`ghostaudit/evidence/screens.py`), 11 transcribed fixtures, the intent fallback wired
+behind the same interface, the run manifest and a generated usage report, the audit-only identity window, 121 offline tests.
+Not done and waiting: the first live call (owner confirms the key and names the model), the transcription-versus-model
+comparison, the final live run whose usage the report will describe. Decisions waiting for the owner: whether the account
+should get the same identity-only wide window as audit records (6 hero cases), and which model(s) to use for the screenshots.

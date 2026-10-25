@@ -81,12 +81,23 @@ resources are linked to the case through identity tokens inside a time window ->
 are ordered and cited deterministically. Design notes, the evidence catalogue and the sprint plan are in
 `code/notes/`. Reports are in `code/evaluation/`.
 
-LLM use and API keys: the current core is fully deterministic and makes no network calls. The planned LLM steps
-(reading the 11 screenshots, and a fallback for unclassifiable request text) go through one interface in
-`code/llm/` that can replay stored responses offline or call OpenRouter. The live backend reads the key from the
-`OPENROUTER_API_KEY` environment variable and defaults to a placeholder; **outside the development sandbox a real
-OpenRouter key must be exported before running with `--llm live`.** No key is stored in this repository. Token and
-cost figures in `usage_report.md` come only from real API responses.
+LLM use and API keys: two steps may use a model, both through one interface in `code/llm/` (`off`, `replay`, `live`,
+`record`): reading the 11 application screenshots, and a fallback for request texts the rule-based classifier cannot place
+(it fires for none of the 518). `python3 code/main.py` defaults to `--llm replay`: offline, deterministic, no key; the
+screenshots are then read from stored transcriptions made by hand (`code/llm/fixtures/transcribed/`, labelled
+`transcribed`, no usage numbers). Live calls are opt-in and refused unless all three are given:
+
+```bash
+export OPENROUTER_API_KEY=...            # a real key; outside the development sandbox this is required
+python3 code/main.py --llm live --model <openrouter-model-id> --confirm-live
+python3 code/llm/compare.py              # model readings against the transcriptions, writes screenshot_agreement.md
+```
+
+The key is read only from the environment (a placeholder is used when it is unset, and the placeholder is refused); it is
+never written anywhere. Every real response is appended to `code/evaluation/usage_ledger.md` with the tokens and cost the
+provider reported, and `python3 code/main.py` regenerates `code/evaluation/run_manifest.md` and `usage_report.md` together with
+`output.csv`, so the usage report always describes the run that produced the output file. Request texts sent to a model in
+`live` mode contain whatever personal data the request itself contains. Prompts are Markdown files in `code/prompts/`.
 
 ## Dataset
 
