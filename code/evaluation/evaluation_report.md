@@ -296,8 +296,8 @@ it. Which family the hidden grader weighs more is not documented.
 Of the 118 evaluation requests whose account is guessed, omitted or unmatched, **none** has a verdict that depends on
 which candidate is chosen: every candidate has no admissible observation, so it is verified absent whichever it is
 (`code/tests/test_options.py` checks that omit, hybrid and guess give identical verdicts for all cases). The residual
-accounts affect exactly one step per case (the `VERIFY_RECORD_ABSENT` of the account): at most 108 steps of 3201
-(3.4%), and by the backtest about 29 omitted plus roughly 36 wrong guesses.
+accounts affect exactly one step per case (the `VERIFY_RECORD_ABSENT` of the account): at most 108 steps of 3235
+(3.3%), and by the backtest about 29 omitted plus roughly 36 wrong guesses.
 
 The other 10 of the 118 ("unmatched") are 10 of the 12 image/PDF cases. They have no worker event the matcher can use,
 **and** their verdict depends on screenshot facts. That was the largest verdict risk and set the priority order (image/PDF
@@ -316,7 +316,7 @@ INCOMPLETE.
 2. **Audit records missing from 83 evaluation cases.** For these the plan emits no audit step at all, and no invented or
    placeholder id (decision kept). All 24 batch-family samples have an audit step in their golden answer (22 visible in
    the evidence, 2 not), and the 83 cases are all in batch families, so **the expected miss is up to 83 steps** (2.6% of
-   the 3201 evaluation steps; no verdict changes). Details in section 9.
+   the 3235 evaluation steps; no verdict changes). Details in section 9.
 3. **Hero cases.** Eight of the 12 image/PDF cases have their audit record in evidence captured months after the audit
    (`evidence_01`, `evidence_02`). **Done in Sprint 4, for identity only:** an audit record is now attributed to its user
    whatever the capture date of the file that names it; its state still has to come from evidence captured on or before
@@ -357,7 +357,7 @@ Pattern in the 32 samples:
 Reading: when the user's audit record is visible, the golden answer has it (22/22); in the batch families it is present even
 when the evidence lost it (2/2). The 83 cases are all in batch families, so the likeliest case is that their golden answers
 contain an audit step that cannot be recovered. **Expected impact if so:** 83 missing steps, one per case, which is 2.6% of
-the 3201 evaluation steps (recall only; no verdict changes). If their golden answers omit it, the impact is zero. A made-up id
+the 3235 evaluation steps (recall only; no verdict changes). If their golden answers omit it, the impact is zero. A made-up id
 would be a wrong step as well (one false positive plus the same missing step), so nothing is emitted.
 
 ## 10. Failures found and improvements made (so far)

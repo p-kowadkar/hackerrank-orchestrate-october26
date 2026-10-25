@@ -153,3 +153,47 @@ branch=main
 repo_root=/home/user/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-25T02:32:08Z] Sprint 4 offline pieces: LLM interface, screenshot reader, audit-only window
+
+User Prompt (verbatim, secrets redacted):
+Sprint 3 reviewed. Decisions and requests:
+
+1. Policy: keep hybrid as the default. The grader's formula is unpublished, the step-F1 difference is small, and the position-sensitive advantage of guess depends on an unconfirmed assumption. Record this reasoning in evaluation_report.md, including the trade-off against guess.
+
+2. Order: Sprint 4 next, ahead of the remaining Sprint 2 cleanup. The image/PDF cases carry the largest verdict risk. Sprint 2 follows afterwards.
+
+3. Audit window: add the wider audit-only window in Sprint 4 for identity only (which record id belongs to the case). The clock rule for state is unchanged: state must come from evidence captured on or before audit_at. Check this against the samples before relying on it.
+
+4. Missing audit steps: keep them omitted for the 83 cases, with no invented or placeholder ids. Record in the open-risks section that all 24 batch-family samples have an audit step, so the expected miss is up to 83 steps.
+
+5. Reporting hygiene:
+   - Separate the 12 hand-built cases from accuracy figures. Present them as synthetic regression coverage, with golden-sample results as the only headline accuracy.
+   - Describe the cadence evidence exactly as measured (7/7 sample cases plus the premise check), not as an accuracy rate.
+   - Keep the support-ticket versus attachment risk (8 cases, 24 steps) in the open-risks section, with the current clock-rule behavior stated.
+
+6. Sprint 4 scope:
+   - Build the LLM interface with replay, live, record and off backends, and structured, validated output for the screenshot reader.
+   - Seed replay fixtures from your own transcriptions, labelled transcribed, carrying no usage numbers.
+   - Do not make any live call until I confirm the OpenRouter key is configured. Until then, build and test using the replay backend only.
+   - When live calls are enabled: run the 11 screenshots, compare results against your transcriptions, and report disagreements. Do not overwrite the transcriptions automatically. Treat that comparison as agreement between two model readings, not ground truth.
+   - Log per-call tokens and cost from the real responses. The run that produces the final output.csv must match what usage_report.md describes.
+
+7. Proceed with Sprint 4 on the offline pieces now, and report back before the first live call.
+
+Agent Response Summary:
+Recorded the hybrid decision and its trade-off in evaluation_report.md and split the synthetic cases out of every accuracy figure. Added the audit-only identity window after checking it against the samples (one record per user across 457 users, samples unchanged). Built code/llm (interface, off/replay/live/record backends, validators, usage ledger, Markdown prompts, comparison tool), a closed screenshot schema with deterministic fact-to-state mapping, 11 transcribed fixtures from re-reading every image, the intent fallback, a run manifest tied to the md5 of output.csv and a generated usage report. No live call was made and none can be made without --confirm-live, a real key and a model; a simulated provider in temp dirs exercised the live path end to end.
+
+Actions:
+* edited code/ghostaudit/{state,planner,pipeline}.py, code/main.py, code/evaluation/*.py, README.md, notes, evaluation_report.md
+* created code/llm/ (interface, off, replay, openrouter, record, factory, fixtures, schemas, prompts, reader, compare, manifest, offline, usage), code/prompts/*.md, code/ghostaudit/evidence/screens.py, 11 files under code/llm/fixtures/transcribed/, code/tests/test_llm.py
+* viewed all 11 PNGs to write the transcriptions; ran 122 offline tests, the evaluation tools and a simulated live run in the scratchpad
+* committed in small commits and pushed main; scanned commit messages for trailers (none); no network call to openrouter.ai
+
+Context:
+tool=Claude Code
+model=claude-sonnet-5-5
+branch=main
+repo_root=/home/user/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
