@@ -114,3 +114,42 @@ branch=main
 repo_root=/home/user/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-25T01:51:38Z] Sprint 1 review; Sprint 3 variant hardening and reports
+
+User Prompt (verbatim, secrets redacted):
+Sprint 1 reviewed. Decisions and requests:
+
+1. Approved: hybrid as the default policy, natural numeric row order, and the cadence heuristic on condition. Backtest cadence the same way as the tiebreak (hide the known links, then measure accuracy by candidate count). Report that number. Keep PlanOptions(use_cadence=False) working.
+
+2. Status impact: of the roughly 122 accounts that are guessed, omitted or unmatched, report how many change the case-level COMPLETE/INCOMPLETE verdict, as opposed to only changing steps. Use that to set the priority order.
+
+3. Scoring check: confirm in the README or problem statement how steps are scored. Make sure the scorer and the guess-versus-omit analysis use the same definition, and cite the source in evaluation_report.md.
+
+4. Audit-record gap: for the 83 cases in 14 batches with no discoverable audit record, state what the plan currently outputs. Check the 32 samples for any pattern in when golden answers include an audit step, then report the expected impact either way.
+
+5. Do not spend time on sample cases 04, 18 and 20, whose ids appear in no participant file. Document them as unrecoverable.
+
+6. Reorder: Sprint 3 first. Harden the eight evidence variants that have no sample truth (three replica layouts, five log dialects) using cross-format consistency checks and at least three custom evaluation cases. Then the remaining sample-fidelity cleanup, then Sprint 4.
+
+7. Reporting: start evaluation_report.md and usage_report.md now and extend them each sprint. Describe the cadence and reported_status heuristics honestly as artifacts of the dataset's construction, switchable and counted. In your next report, include one results table (status accuracy, step P/R/F1, exact cases, tiebreak and cadence uses) so the numbers are easy to check.
+
+Proceed with Sprint 3.
+
+Agent Response Summary:
+Backtested the cadence heuristic (no compliant analytics profile is evidence-linked, so only 7 sample cases give truth: 7 right; premise checks on linked resources support it), made both heuristics real switches (--no-cadence, --no-tiebreak) with tests, and showed that none of the 118 guessed, omitted or unmatched evaluation accounts can change a verdict. Re-ran the guess-versus-omit analysis with the sample scorer on 199 cases: hybrid wins on step F1, guess wins on position-sensitive metrics. Hardened the eight eval-only variants (coverage report, replica drift invariants, cross-format and worker-outcome agreement, 12 hand-built cases that found a Spanish non-deletion gap, fixed) and started evaluation_report.md and usage_report.md. Documented the audit-record gap and the unrecoverable samples 04, 18 and 20.
+
+Actions:
+* edited code/ghostaudit/{residual,planner,pipeline,report,intent}.py, evidence/logs.py, code/main.py
+* created code/evaluation/{coverage,custom_cases,results_table}.py, evaluation_report.md, usage_report.md, generated coverage_report.md, custom_cases_results.md, residual_backtest.md
+* created code/tests/{test_options,test_variants,test_custom_cases}.py and extended test_identity_intent.py (75 tests pass)
+* ran the pipeline, scorers and backtests; output.csv unchanged (same md5, 518 rows)
+* committed in small commits and pushed main; checked commit messages for trailers (none)
+
+Context:
+tool=Claude Code
+model=claude-sonnet-5-5
+branch=main
+repo_root=/home/user/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
