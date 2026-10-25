@@ -40,6 +40,11 @@ Acceptance:
   operation ordering, deterministic bytes across two runs.
 - A sample scorecard that lists every discrepancy with its cause.
 
+## Order after the Sprint 1 review
+Sprint 3 first (done), then the remaining sample-fidelity cleanup (Sprint 2), then Sprint 4. Reports
+(`evaluation_report.md`, `usage_report.md`) are started and extended in every sprint. `case_04`, `case_18` and `case_20`
+are documented as unrecoverable (their ids appear in no participant file) and are not worked on.
+
 ## Sprint 2: sample fidelity and the ambiguity policy
 - Fix every discrepancy that is fixable from participant data; keep the rest, each with a documented cause.
 - Anonymized-analytics matching and the remaining residual-id cases.
@@ -47,7 +52,7 @@ Acceptance:
 Deliverable: sample scorecard where each remaining discrepancy is classed as unfixable (id absent from all data,
 or genuinely ambiguous) or as an open question; tiebreak-use counts.
 
-## Sprint 3: eval-only format hardening
+## Sprint 3: eval-only format hardening (DONE: coverage_report.md, test_variants.py, custom_cases.py, 12 hand-built cases)
 - Reporting, regional and failover-generic replicas; pipe, bracket, syslog, JSON-line and cloud-runtime log
   dialects; ledger-style bundles; legal holds; DELETION_PENDING; expiry handling.
 - Cross-format consistency checks (the same user and resource read through different formats agree).

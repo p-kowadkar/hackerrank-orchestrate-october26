@@ -56,6 +56,25 @@ occurrences). The analytics event must sit one, two or three cadence steps befor
 a pattern learned from the data, not a documented rule, so it is reported separately (`run_report.md`, "Worker-cadence heuristic uses")
 and can be switched off with `PlanOptions(use_cadence=False)`.
 
+## Review of Sprint 1 (results of the follow-up work)
+
+- **Cadence backtest.** Hiding evidence links is impossible for analytics: no compliant analytics profile is ever named by
+  evidence (0 cases), because an anonymized profile has no identifier. The only truth is the golden answers of the COMPLETE
+  samples: 7 cases, 7 right (cadence decided 3). A premise check on evidence-linked resources: 414 of 421 consecutive worker
+  events are spaced by one of four gaps (390, 449, 1110, 1169 s); 46 of 47 evidence-linked analytics profiles follow their
+  predecessor by one of them. Turning the cadence off raises analytics guesses from 24 to 43 and changes the steps of 6
+  evaluation cases; it never changes a verdict. `PlanOptions(use_cadence=False)` and `--no-cadence` work and are tested.
+- **Tried and dropped.** A tight 60-second band around the nominal analytics offset changes nothing. Ordering by case number,
+  `requested_at`, user number or e-mail does not predict event order (45 to 60%).
+- **Policy value under the sample scorer** (199 evidence-established cases, same `score.score`): hybrid has the best step F1
+  (0.9685 against 0.9660 for guess and 0.9614 for omit), guess is best on `step_no`, sequence, positional and exact cases
+  (0.964 / 0.947 / 0.964 / 155 against 0.918 / 0.941 / 0.918 / 149 for hybrid). Omit loses on position-sensitive metrics
+  because a missing step renumbers the rest. The hidden grader's weighting is unknown; default stays `hybrid`.
+- **Verdict impact.** None of the 118 evaluation accounts that are guessed, omitted or unmatched can change a verdict
+  (every candidate is absent by default; tested). The 10 unmatched are image/PDF cases whose verdict depends on screenshots.
+- **Switches.** `--no-tiebreak` raises accounts guessed or omitted from 118 to 229 and changes the steps of 153 evaluation
+  cases, and no verdict.
+
 ## Assumptions to confirm
 
 - Output rows are sorted in natural numeric order (`case_33` before `case_100`); the samples are sorted that way.
