@@ -89,13 +89,13 @@ By size of the hidden reported_at cohort (cohort-mates are ambiguous together):
 
 ### Policy value under the sample scorer
 
-Pseudo-golden = our own plan with the true account, 199 evidence-established cases whose account is verified absent (56 more are left out because the account is still present: a residual, unobserved account is never one), scored with `score.score` (the sample scorer). Only the account step can differ.
+Pseudo-golden = our own plan with the true account, 198 evidence-established cases whose account is verified absent (57 more are left out because the account is still present: a residual, unobserved account is never one), scored with `score.score` (the sample scorer). Only the account step can differ.
 
 | policy | status acc | step P / R / F1 | field step_no | field resource_id | seq overlap | positional | exact cases |
 |---|---|---|---|---|---|---|---|
-| omit | 199/199 | 1.000 / 0.926 / 0.9614 | 0.715 | 0.926 | 0.894 | 0.715 | 105/199 |
-| hybrid | 199/199 | 0.977 / 0.961 / 0.9685 | 0.918 | 0.961 | 0.941 | 0.918 | 149/199 |
-| guess | 199/199 | 0.967 / 0.965 / 0.9660 | 0.964 | 0.965 | 0.947 | 0.964 | 155/199 |
+| omit | 198/198 | 1.000 / 0.926 / 0.9617 | 0.716 | 0.926 | 0.897 | 0.716 | 105/198 |
+| hybrid | 198/198 | 0.977 / 0.961 / 0.9688 | 0.919 | 0.961 | 0.945 | 0.919 | 149/198 |
+| guess | 198/198 | 0.967 / 0.966 / 0.9663 | 0.965 | 0.966 | 0.950 | 0.965 | 155/198 |
 
 ## Anonymized analytics profiles (worker-cadence heuristic)
 

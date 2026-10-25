@@ -18,7 +18,7 @@ from ghostaudit import model as m                      # noqa: E402
 from ghostaudit.data import Dataset                    # noqa: E402
 from ghostaudit.evidence import extract_links          # noqa: E402
 from ghostaudit.paths import CODE_DIR, DATASET_DIR     # noqa: E402
-from ghostaudit.pipeline import run                    # noqa: E402
+from llm.offline import run_replay as run                    # noqa: E402
 from ghostaudit.planner import PlanOptions             # noqa: E402
 from score import (load_answers, load_derived, render_scorecard, score, score_derived,   # noqa: E402
                    visible_resource_ids)
@@ -116,8 +116,10 @@ def main(argv=None) -> int:
           f"- sample cases: {len(ties)} uses, {sum(1 for u in ties if u.resolved)} narrowed to one account", ""]
     derived = load_derived(EVAL_DIR / "derived_cases.md")
     L += ["## UNVERIFIED: hand-derived image/PDF cases (not ground truth, excluded from headline)", "",
-          "Predictions below are made without screenshot facts (the screenshot reader arrives in a later sprint), so the "
-          "image-dependent cases are expected to fail for now.", ""]
+          "Predictions below read the screenshots from the stored transcriptions (`code/llm/fixtures/transcribed/`, the assistant's "
+          "own reading of the images). The expectations in `derived_cases.md` are *also* the assistant's reading of the same "
+          "images, so agreement here shows that the reader, the mapping and the planner are wired together correctly; it does "
+          "**not** show that the readings are right. Treat it as consistency between two readings by one reader, not as accuracy.", ""]
     if derived:
         L += ["| case | status expected / predicted | required steps found | confidence |", "|---|---|---|---|"]
         for r in score_derived(to_answers(res.results), derived):

@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import custom_cases                                        # noqa: E402
 from ghostaudit.data import Dataset                        # noqa: E402
 from ghostaudit.paths import DATASET_DIR                   # noqa: E402
-from ghostaudit.pipeline import run                        # noqa: E402
+from llm.offline import run_replay as run                  # noqa: E402
 from ghostaudit.planner import PlanOptions                 # noqa: E402
 from identity_backtest import cadence_hide_population, policy_value, render_policy_value   # noqa: E402
 from main import evaluate, make_classifier, to_answers     # noqa: E402

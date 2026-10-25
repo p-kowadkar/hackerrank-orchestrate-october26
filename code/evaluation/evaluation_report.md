@@ -17,9 +17,9 @@ Only the 32 golden samples carry accuracy figures. The second row is a count of 
 | 32 public samples (headline, golden answers) | 32 | 32/32 | 1.000 / 0.979 / 0.990 | 28/32 | 6 (5) | 3 (3) |
 | 518 evaluation requests (no golden answer; usage counts only) | 518 | n/a | n/a | n/a | 110 (75) | 11 (11) |
 
-Verdicts on the 518 evaluation requests: COMPLETE 161, INCOMPLETE 347, NOT_APPLICABLE 10.
+Verdicts on the 518 evaluation requests: COMPLETE 153, INCOMPLETE 355, NOT_APPLICABLE 10.
 
-Not accuracy either, because they are unverified: the 12 hand-derived image/PDF expectations (`derived_cases.md`). Status matches 4/12; required steps found 5/33.
+Not accuracy either, because they are unverified: the 12 hand-derived image/PDF expectations (`derived_cases.md`). Status matches 12/12; required steps found 33/33.
 <!-- /block:results -->
 
 How to read it: the 32 public samples are the only ground truth that exists, so they are the only headline accuracy. The
@@ -264,13 +264,13 @@ accounts, so this is a thin margin. The larger check uses the same scorer on 199
 account step is hidden, the case re-planned under each policy, and compared with the plan that has the true account):
 
 <!-- block:policy -->
-Pseudo-golden = our own plan with the true account, 199 evidence-established cases whose account is verified absent (56 more are left out because the account is still present: a residual, unobserved account is never one), scored with `score.score` (the sample scorer). Only the account step can differ.
+Pseudo-golden = our own plan with the true account, 198 evidence-established cases whose account is verified absent (57 more are left out because the account is still present: a residual, unobserved account is never one), scored with `score.score` (the sample scorer). Only the account step can differ.
 
 | policy | status acc | step P / R / F1 | field step_no | field resource_id | seq overlap | positional | exact cases |
 |---|---|---|---|---|---|---|---|
-| omit | 199/199 | 1.000 / 0.926 / 0.9614 | 0.715 | 0.926 | 0.894 | 0.715 | 105/199 |
-| hybrid | 199/199 | 0.977 / 0.961 / 0.9685 | 0.918 | 0.961 | 0.941 | 0.918 | 149/199 |
-| guess | 199/199 | 0.967 / 0.965 / 0.9660 | 0.964 | 0.965 | 0.947 | 0.964 | 155/199 |
+| omit | 198/198 | 1.000 / 0.926 / 0.9617 | 0.716 | 0.926 | 0.897 | 0.716 | 105/198 |
+| hybrid | 198/198 | 0.977 / 0.961 / 0.9688 | 0.919 | 0.961 | 0.945 | 0.919 | 149/198 |
+| guess | 198/198 | 0.967 / 0.966 / 0.9663 | 0.965 | 0.966 | 0.950 | 0.965 | 155/198 |
 <!-- /block:policy -->
 
 The ranking depends on the metric: **hybrid wins on step F1**, **guess wins on every position-sensitive metric**

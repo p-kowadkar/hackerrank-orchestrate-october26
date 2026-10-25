@@ -2,8 +2,8 @@
 
 ## Verdicts
 
-- COMPLETE: 161
-- INCOMPLETE: 347
+- COMPLETE: 153
+- INCOMPLETE: 355
 - NOT_APPLICABLE: 10
 
 ## Account identity (all deletion cases used as matching context)
@@ -169,4 +169,4 @@ Ambiguity policy: `hybrid`. `guess` = deterministic pick among candidates; `ambi
 
 ## Evidence parsing
 
-- observations: 2522; records parsed: 2898; noise events ignored: 1142; unrecognised: 0; files skipped (screenshots): 11
+- observations: 2533; records parsed: 2909; noise events ignored: 1142; unrecognised: 0; files skipped (screenshots): 0

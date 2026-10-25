@@ -81,19 +81,19 @@ Sample size is small, so the margin deserves caution. Across all 540 deletion ca
 
 ## UNVERIFIED: hand-derived image/PDF cases (not ground truth, excluded from headline)
 
-Predictions below are made without screenshot facts (the screenshot reader arrives in a later sprint), so the image-dependent cases are expected to fail for now.
+Predictions below read the screenshots from the stored transcriptions (`code/llm/fixtures/transcribed/`, the assistant's own reading of the images). The expectations in `derived_cases.md` are *also* the assistant's reading of the same images, so agreement here shows that the reader, the mapping and the planner are wired together correctly; it does **not** show that the readings are right. Treat it as consistency between two readings by one reader, not as accuracy.
 
 | case | status expected / predicted | required steps found | confidence |
 |---|---|---|---|
 | case_33 | INCOMPLETE / INCOMPLETE | 3/3 | medium |
-| case_34 | INCOMPLETE / INCOMPLETE | 1/3 | high |
-| case_35 | INCOMPLETE / COMPLETE | 0/3 | high |
-| case_39 | INCOMPLETE / COMPLETE | 0/3 | high |
-| case_45 | COMPLETE / COMPLETE | 0/1 | medium |
-| case_46 | COMPLETE / COMPLETE | 1/2 | medium |
-| case_50 | INCOMPLETE / COMPLETE | 0/3 | high |
-| case_52 | INCOMPLETE / COMPLETE | 0/3 | high |
-| case_53 | INCOMPLETE / COMPLETE | 0/3 | medium |
-| case_55 | INCOMPLETE / COMPLETE | 0/3 | high |
-| case_61 | INCOMPLETE / COMPLETE | 0/3 | medium |
-| case_63 | INCOMPLETE / COMPLETE | 0/3 | medium |
+| case_34 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_35 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_39 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_45 | COMPLETE / COMPLETE | 1/1 | medium |
+| case_46 | COMPLETE / COMPLETE | 2/2 | medium |
+| case_50 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_52 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_53 | INCOMPLETE / INCOMPLETE | 3/3 | medium |
+| case_55 | INCOMPLETE / INCOMPLETE | 3/3 | high |
+| case_61 | INCOMPLETE / INCOMPLETE | 3/3 | medium |
+| case_63 | INCOMPLETE / INCOMPLETE | 3/3 | medium |

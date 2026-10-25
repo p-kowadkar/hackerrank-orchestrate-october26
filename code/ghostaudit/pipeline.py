@@ -68,7 +68,7 @@ def analytics_inputs(ds: Dataset, index, contexts, assignments) -> tuple:
     return sibling_times, skip
 
 
-def run(ds: Dataset, requested=None, options: PlanOptions | None = None, images=None) -> RunResult:
+def run(ds: Dataset, requested=None, options: PlanOptions | None = None, images=None, intent_fallback=None) -> RunResult:
     options = options or PlanOptions()
     requested = list(ds.requests if requested is None else requested)
     resolver = IdentityResolver(ds.identities, ds.audit_log)
@@ -81,8 +81,13 @@ def run(ds: Dataset, requested=None, options: PlanOptions | None = None, images=
         label = intent.label
         corroborated = req.email.lower() in flagged
         if label == UNCLEAR:
-            out.warnings.append(f"{req.case_id}: intent unclear; defaulting to DELETE (LLM fallback not wired)")
-            label = DELETE
+            decided = intent_fallback(req.case_id, req.request_text) if intent_fallback is not None else None
+            if decided in (DELETE, NON_DELETE):
+                out.warnings.append(f"{req.case_id}: intent unclear to the rules; the model fallback said {decided}")
+                label = decided
+            else:
+                out.warnings.append(f"{req.case_id}: intent unclear and no model answer; defaulting to DELETE")
+                label = DELETE
         if label == DELETE and corroborated:
             out.warnings.append(f"{req.case_id}: text says deletion but a CLASSIFY_REQUEST event flags it non-deletion")
         out.intents[req.case_id] = (label, intent.reason, corroborated)

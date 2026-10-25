@@ -4,22 +4,22 @@ Measured on participant-facing data. Golden sample answers are used only to say 
 
 ## 1. Coverage by family
 
-94 evidence files; unrecognised records across all files: **0** (a test fails if any state-bearing record is dropped silently). `skipped` counts the 11 screenshots, which wait for the image reader (Sprint 4).
+94 evidence files; unrecognised records across all files: **0** (a test fails if any state-bearing record is dropped silently). The 11 screenshots are read from the stored transcriptions (`code/llm/fixtures/transcribed/`): one parsed record each (the highlighted subject row); the other rows of a screen are context and are never observations. With `--llm off` they would show as `skipped`.
 
 | family | type | files | records parsed | noise ignored | snapshots | unknown | skipped | files a sample answer depends on |
 |---|---|---|---|---|---|---|---|---|
-| account_admin_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| account_admin_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | account_history_report | pdf | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
-| analytics_profile_view | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| analytics_profile_view | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | application_trace | log | 2 | 77 | 141 | 0 | 0 | 0 | 0 |
-| backup_restore_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| backup_restore_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | cloud_runtime_export | log | 2 | 343 | 90 | 0 | 0 | 0 | 0 |
 | connector_configurations | json | 1 | 39 | 0 | 0 | 0 | 0 | 0 |
-| connector_management_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| connector_management_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | customer_account_handover | txt | 1 | 41 | 0 | 0 | 0 | 0 | 1 |
 | customer_accounts_failover_replica | sql | 1 | 7 | 0 | 2 | 0 | 0 | 1 |
 | customer_analytics_report | json | 1 | 2 | 0 | 0 | 0 | 0 | 1 |
-| customer_export_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| customer_export_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | customer_export_jobs | json | 1 | 2 | 0 | 0 | 0 | 0 | 1 |
 | customer_export_manifest | json | 1 | 46 | 0 | 0 | 0 | 0 | 0 |
 | customer_search_primary | sql | 1 | 6 | 0 | 1 | 0 | 0 | 1 |
@@ -29,24 +29,24 @@ Measured on participant-facing data. Golden sample answers are used only to say 
 | data:regional_replicas | sql | 3 | 259 | 0 | 259 | 0 | 0 | 0 |
 | data:reporting_replica | sql | 2 | 100 | 0 | 100 | 0 | 0 | 0 |
 | data:snapshot_bundle | json | 12 | 485 | 0 | 113 | 0 | 0 | 1 |
-| deleted_account_reference | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| deleted_account_reference | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | delivery_correction_attachment | pdf | 1 | 1 | 0 | 0 | 0 | 0 | 1 |
 | legal_retention_register | pdf | 1 | 0 | 1 | 0 | 0 | 0 | 0 |
-| marketing_profile_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| marketing_profile_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | notification_delivery | log | 1 | 39 | 0 | 0 | 0 | 0 | 0 |
-| object_storage_browser | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| object_storage_browser | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | operations_stream | log | 2 | 77 | 154 | 0 | 0 | 0 | 0 |
 | resource_lookup_trace | log | 11 | 264 | 286 | 0 | 0 | 0 | 1 |
 | search_index_diagnostic | log | 1 | 36 | 0 | 0 | 0 | 0 | 0 |
-| search_index_inspector | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
-| security_audit_explorer | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| search_index_inspector | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| security_audit_explorer | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | security_audit_ledger | json | 1 | 20 | 0 | 0 | 0 | 0 | 0 |
 | security_retention_extract | pdf | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | service_events | log | 2 | 74 | 140 | 0 | 0 | 0 | 1 |
 | service_resource_export | json | 11 | 296 | 0 | 0 | 0 | 0 | 1 |
 | structured_service_events | log | 2 | 81 | 167 | 0 | 0 | 0 | 0 |
 | support_replica | log | 1 | 3 | 7 | 0 | 0 | 0 | 1 |
-| support_ticket_console | png | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
+| support_ticket_console | png | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | syslog_archive | log | 2 | 76 | 156 | 0 | 0 | 0 | 0 |
 
 ### The eight evidence variants with no sample truth (16 files: three replica layouts, five log dialects)
@@ -106,11 +106,12 @@ The same resource read through two different files, observation times within one
 | bundle / readback_json | 29 | 2 |
 | bundle_ledger / inventory_sql | 21 | 0 |
 | bundle_ledger / log | 16 | 0 |
+| image / pdf | 1 | 0 |
 | inventory_sql / log | 40 | 1 |
 | log / log | 12 | 1 |
 | log / readback_json | 17 | 0 |
 
-Overall: 204 agree, 6 differ.
+Overall: 205 agree, 6 differ.
 
 - differs (bundle / inventory_sql): support_2315: evidence_12 says SUPPORT_ATTACHMENT/PRESENT, evidence_87 says SUPPORT_MESSAGE/EXPOSED
 - differs (bundle / inventory_sql): support_2283: evidence_17 says SUPPORT_ATTACHMENT/PRESENT, evidence_84 says SUPPORT_MESSAGE/EXPOSED
@@ -127,6 +128,7 @@ Independent check for analytics, support messages and tombstones: a SUCCESS work
 
 | family | agree | recreated after success | differ |
 |---|---|---|---|
+| analytics_profile_view | 1 | 0 | 0 |
 | cloud_runtime_export | 9 | 0 | 0 |
 | connector_configurations | 7 | 0 | 0 |
 | customer_account_handover | 6 | 0 | 0 |
@@ -145,13 +147,14 @@ Independent check for analytics, support messages and tombstones: a SUCCESS work
 | service_events | 1 | 0 | 0 |
 | service_resource_export | 84 | 2 | 0 |
 | structured_service_events | 8 | 2 | 0 |
+| support_ticket_console | 1 | 0 | 0 |
 | syslog_archive | 3 | 2 | 0 |
 
 ## 5. How often the open semantic questions occur
 
 - legal-hold observations: 8
-- tombstone observations: 10
-- marketing-profile observations: 1
+- tombstone observations: 11
+- marketing-profile observations: 2
 - support ids seen as both message and attachment: 8
 - DELETION_PENDING mentions: 8
 - exports with download_available false: 1

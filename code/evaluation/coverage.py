@@ -22,7 +22,7 @@ from ghostaudit import model as m                      # noqa: E402
 from ghostaudit.data import Dataset                    # noqa: E402
 from ghostaudit.evidence.logs import parse_line        # noqa: E402
 from ghostaudit.paths import DATASET_DIR               # noqa: E402
-from ghostaudit.pipeline import run                    # noqa: E402
+from llm.offline import run_replay as run             # noqa: E402
 from ghostaudit.planner import PlanOptions             # noqa: E402
 from ghostaudit.timeutil import epoch                  # noqa: E402
 from score import load_answers                         # noqa: E402
@@ -248,8 +248,9 @@ def build_report() -> str:
          "exercise; the families that none of them touches are the ones needing extra hardening.", "",
          "## 1. Coverage by family", "",
          f"{len(rows)} evidence files; unrecognised records across all files: **{unknown_total}** "
-         "(a test fails if any state-bearing record is dropped silently). `skipped` counts the 11 screenshots, "
-         "which wait for the image reader (Sprint 4).", ""]
+         "(a test fails if any state-bearing record is dropped silently). The 11 screenshots are read from the stored "
+         "transcriptions (`code/llm/fixtures/transcribed/`): one parsed record each (the highlighted subject row); the other "
+         "rows of a screen are context and are never observations. With `--llm off` they would show as `skipped`.", ""]
     L += render_families(rows)
     variants = [r for r in rows if r["family"] in EVAL_ONLY]
     L += ["", f"### The eight evidence variants with no sample truth ({len(variants)} files: three replica layouts, five log dialects)", "",

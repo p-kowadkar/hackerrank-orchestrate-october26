@@ -29,7 +29,7 @@ from ghostaudit.evidence import build_index                 # noqa: E402
 from ghostaudit.identity import IdentityResolver            # noqa: E402
 from ghostaudit.intent import DELETE, classify_text         # noqa: E402
 from ghostaudit import model as m                           # noqa: E402
-from ghostaudit.pipeline import run                         # noqa: E402
+from llm.offline import offline_reader, run_replay as run   # noqa: E402
 from ghostaudit.planner import PlanOptions, build_context, decisions_for, plan_case  # noqa: E402
 from ghostaudit.residual import AccountMatcher              # noqa: E402
 
@@ -37,7 +37,7 @@ from ghostaudit.residual import AccountMatcher              # noqa: E402
 def backtest(ds: Dataset | None = None, use_tiebreak: bool = True, policy: str = "guess") -> dict:
     ds = ds or Dataset()
     resolver = IdentityResolver(ds.identities, ds.audit_log)
-    index = build_index(ds)
+    index = build_index(ds, offline_reader())
     contexts = [build_context(index, resolver, r) for r in ds.all_requests if classify_text(r.request_text).label == DELETE]
     truth = {}
     for c in contexts:

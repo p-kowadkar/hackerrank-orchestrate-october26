@@ -1,8 +1,10 @@
 """Shared, lazily built fixtures so the suite stays fast (the dataset builds in about a second)."""
+import os
 import sys
 from functools import lru_cache
 from pathlib import Path
 
+os.environ["GHOSTAUDIT_OFFLINE"] = "1"      # the default HTTP transport refuses to open a socket anywhere in the test suite
 CODE = Path(__file__).resolve().parents[1]
 for p in (CODE, CODE / "evaluation"):
     if str(p) not in sys.path:
@@ -11,7 +13,7 @@ for p in (CODE, CODE / "evaluation"):
 from ghostaudit.data import Dataset          # noqa: E402
 from ghostaudit.evidence import build_index  # noqa: E402
 from ghostaudit.identity import IdentityResolver  # noqa: E402
-from ghostaudit.pipeline import run          # noqa: E402
+from llm.offline import run_replay as run   # noqa: E402
 from ghostaudit.planner import PlanOptions   # noqa: E402
 
 

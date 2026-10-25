@@ -122,8 +122,9 @@ class AuditWindowTests(unittest.TestCase):
         import json, csv
         from .support import resolver
         from ghostaudit.paths import DATASET_DIR
-        gold = {r["case_id"]: {s["resource_id"] for s in json.loads(r["steps_json"]) if s["resource_id"].startswith("audit_record")}
-                for r in csv.DictReader(open(DATASET_DIR / "sample_output.csv", encoding="utf-8"))}
+        with open(DATASET_DIR / "sample_output.csv", newline="", encoding="utf-8") as fh:
+            gold = {r["case_id"]: {s["resource_id"] for s in json.loads(r["steps_json"]) if s["resource_id"].startswith("audit_record")}
+                    for r in csv.DictReader(fh)}
         differs = []
         for r in dataset().sample_requests:
             uid, _ = resolver().resolve(r.email)

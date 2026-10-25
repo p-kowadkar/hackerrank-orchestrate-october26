@@ -3,7 +3,7 @@ import unittest
 from collections import Counter
 
 from .support import dataset
-from ghostaudit.pipeline import run
+from llm.offline import run_replay as run
 from ghostaudit.planner import PlanOptions
 
 
