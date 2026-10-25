@@ -24,7 +24,7 @@ from llm.compare import compare_all, diff_readings, render as render_agreement
 from llm.factory import make_backend, new_run_id
 from llm.fixtures import FIXTURE_ROOT, parse_fixture, path_for, render_fixture
 from llm.interface import (FixtureMissing, LLMError, LLMRequest, LLMResult, LLMUnavailable, LLMValidationError, Usage)
-from llm.manifest import parse_manifest, render_manifest, render_usage_report
+from llm.manifest import other_rows, parse_manifest, render_manifest, render_usage_report
 from llm.off import OffBackend
 from llm.offline import offline_reader, run_replay
 from llm.openrouter import (KEY_ENV, NetworkDisabled, LiveNotConfigured, OpenRouterBackend, key_is_configured,
@@ -500,6 +500,17 @@ class MainAndManifestTests(unittest.TestCase):
                 cli.main(["--llm", mode, "--out", "/nonexistent/out.csv"])
             self.assertEqual(cm.exception.code, 2)
 
+    def test_a_live_run_that_cannot_read_the_screenshots_writes_no_output(self):
+        cli = load_cli()
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ):
+            os.environ.pop(KEY_ENV, None)
+            out = Path(tmp) / "out.csv"
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = cli.main(["--llm", "live", "--model", "vendor/model-x", "--confirm-live", "--out", str(out),
+                                 "--report", str(Path(tmp) / "r.md")])
+            self.assertEqual(code, 3)
+            self.assertFalse(out.exists())
+
     def test_the_default_mode_is_replay_and_needs_no_key_or_network(self):
         cli = load_cli()
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ):
@@ -520,7 +531,7 @@ class MainAndManifestTests(unittest.TestCase):
         rows = ledger.rows(mf["run_id"])
         self.assertEqual(mf["api_calls"], len(rows))
         committed = (CODE / "evaluation" / "usage_report.md").read_text(encoding="utf-8")
-        self.assertEqual(committed, render_usage_report(mf, rows))
+        self.assertEqual(committed, render_usage_report(mf, rows, other_rows(ledger, mf["run_id"])))
         self.assertEqual(manifest_path.read_text(encoding="utf-8"), render_manifest(mf))
 
     def test_usage_report_totals_come_only_from_ledger_rows(self):
@@ -535,6 +546,11 @@ class MainAndManifestTests(unittest.TestCase):
         self.assertIn("| average total tokens per request (10 requests) | 46.00 |", text)
         self.assertIn("reported no cost for 1 of 2 calls", text)
         self.assertIn("real API call in this run", text)
+        other = [LedgerRow("run-0", "t", STEP, "evidence_04", "openrouter", "vendor/m", "g0", 50, 5, 55, 0.002, "ok")]
+        text2 = render_usage_report(mf, rows, other)
+        self.assertIn("Other runs in the ledger", text2)
+        self.assertIn("1 API calls in 1 other run(s), 55 tokens, 0.002000 USD", text2)
+        self.assertIn("| openrouter | vendor/m | 2 | 0 | 400 | 60 | 460 | 0.010000 |", text2)       # totals unchanged by other runs
 
     def test_no_secret_or_key_shaped_string_is_in_the_repository(self):
         pattern = re.compile(r"sk-or-[A-Za-z0-9]{8,}|Bearer [A-Za-z0-9\-_]{20,}")

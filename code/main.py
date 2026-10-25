@@ -57,6 +57,12 @@ def main(argv=None) -> int:
     reader, fallback = ScreenshotReader(backend), IntentFallback(backend)
     res = run(ds, ds.requests, PlanOptions(ambiguity=args.ambiguity, use_cadence=not args.no_cadence,
                                        use_tiebreak=not args.no_tiebreak), images=reader, intent_fallback=fallback)
+    if args.llm in ("live", "record") and reader.unread:
+        print("refusing to write an output: live/record mode left screenshots unread, so the answer would not match what the usage "
+              "report describes:")
+        for fid, why in reader.unread:
+            print(f"  screenshot {fid}: {why}")
+        return 3
     write_output(args.out, res.results)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(run_report(res), encoding="utf-8")

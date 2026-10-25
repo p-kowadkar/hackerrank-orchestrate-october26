@@ -68,7 +68,7 @@ def parse_manifest(text: str) -> dict:
 
 
 # --------------------------------------------------------------------------------------------- the usage report
-def render_usage_report(m: dict, rows: list) -> str:
+def render_usage_report(m: dict, rows: list, other: list = ()) -> str:
     n = m["output_rows"]
     by_model = defaultdict(lambda: Counter())
     costs_missing = 0
@@ -133,6 +133,13 @@ def render_usage_report(m: dict, rows: list) -> str:
     if not rows:
         L += ["No model was called in this run, so every token and cost figure is zero. This is the state of the repository until a "
               "live run is made: the screenshots are read from the stored transcriptions above.", ""]
+    if other:
+        o_tok = sum(r.total_tokens for r in other)
+        o_cost = sum(r.cost_usd for r in other if r.cost_usd is not None)
+        L += ["## Other runs in the ledger (not part of the run above)", "",
+              f"{len(other)} API calls in {len({r.run_id for r in other})} other run(s), {o_tok} tokens, {o_cost:.6f} USD reported. "
+              "They were made but did not produce the submitted `output.csv`, so they are not in the totals above; they are listed here "
+              "so that the money actually spent is not hidden.", ""]
     L += ["## Rules", "",
           "- Tokens and cost come only from the `usage` block of real API responses, written to the ledger when the response arrives.",
           "- A transcription made by hand is labelled `transcribed`, carries no usage, and can never enter the ledger.",
@@ -141,15 +148,22 @@ def render_usage_report(m: dict, rows: list) -> str:
     return "\n".join(L)
 
 
+def other_rows(ledger: Ledger, run_id: str) -> list:
+    return [r for r in ledger.rows() if r.run_id != run_id]
+
+
 def write_run_artifacts(manifest: dict, ledger: Ledger, manifest_path: Path = MANIFEST_PATH,
                         usage_path: Path = USAGE_REPORT_PATH) -> None:
     manifest_path.write_text(render_manifest(manifest), encoding="utf-8", newline="\n")
-    usage_path.write_text(render_usage_report(manifest, ledger.rows(manifest["run_id"])), encoding="utf-8", newline="\n")
+    usage_path.write_text(render_usage_report(manifest, ledger.rows(manifest["run_id"]), other_rows(ledger, manifest["run_id"])),
+                          encoding="utf-8", newline="\n")
 
 
 def main() -> int:
     """Re-render the usage report from the manifest and ledger on disk (the same function main.py uses)."""
     m = parse_manifest(MANIFEST_PATH.read_text(encoding="utf-8"))
-    USAGE_REPORT_PATH.write_text(render_usage_report(m, Ledger().rows(m["run_id"])), encoding="utf-8", newline="\n")
+    ledger = Ledger()
+    USAGE_REPORT_PATH.write_text(render_usage_report(m, ledger.rows(m["run_id"]), other_rows(ledger, m["run_id"])), encoding="utf-8",
+                                 newline="\n")
     print(f"wrote {USAGE_REPORT_PATH}")
     return 0
