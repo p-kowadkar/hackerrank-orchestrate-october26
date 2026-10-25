@@ -1,10 +1,16 @@
-"""Backtest of the residual identity matching on cases whose account is known from evidence.
+"""Backtests of the residual identity matching, on cases whose resource is known from evidence.
 
-For every case whose account is established directly by evidence, hide that link (for the whole reported_at cohort
-at once, which is the hard situation: cohort-mates are ambiguous together), run the matcher from the activity stream
-alone, and compare with the evidence-established account. This yields many more data points than the 32 samples and
-uses no golden labels. It answers: how accurate is a guess when k candidates remain, and does the last-resort
-status/worker-result tiebreak help?
+Accounts: for every case whose account is established directly by evidence, hide that link (for the whole reported_at
+cohort at once, which is the hard situation: cohort-mates are ambiguous together), run the matcher from the activity
+stream alone, and compare with the evidence-established account. This yields many more data points than the 32
+samples and uses no golden labels. It answers: how accurate is a guess when k candidates remain, and does the
+last-resort status/worker-result tiebreak help?
+
+Analytics: the same idea for the anonymized analytics profile. Cases whose compliant profile is tied to them by evidence
+have that link hidden; the matcher then has to find it from worker events, with and without the worker-cadence
+heuristic. Accuracy is reported by the number of candidates left before the cadence is applied.
+
+Run: python3 code/evaluation/identity_backtest.py  (writes code/evaluation/residual_backtest.md)
 """
 from __future__ import annotations
 
@@ -13,12 +19,18 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ghostaudit.data import Dataset                         # noqa: E402
+from ghostaudit.paths import DATASET_DIR                    # noqa: E402
+from ghostaudit.timeutil import parse                       # noqa: E402
+from score import load_answers                              # noqa: E402
 from ghostaudit.evidence import build_index                 # noqa: E402
 from ghostaudit.identity import IdentityResolver            # noqa: E402
 from ghostaudit.intent import DELETE, classify_text         # noqa: E402
-from ghostaudit.planner import build_context                # noqa: E402
+from ghostaudit import model as m                           # noqa: E402
+from ghostaudit.pipeline import run                         # noqa: E402
+from ghostaudit.planner import PlanOptions, build_context, decisions_for  # noqa: E402
 from ghostaudit.residual import AccountMatcher              # noqa: E402
 
 
@@ -43,16 +55,10 @@ def backtest(ds: Dataset | None = None, use_tiebreak: bool = True, policy: str =
             if c.request.case_id in ids:
                 saved[c.request.case_id] = dict(c.direct)
                 c.direct = {k: v for k, v in c.direct.items() if not k.startswith("account_")}
-        matcher = AccountMatcher(ds.activity, index, resolver, policy)
+        matcher = AccountMatcher(ds.activity, index, resolver, policy, use_tiebreak)
         for cid in ids:                                               # an unresolved account has no ownership trail either
             matcher.owners.pop(truth[cid], None)
-        if not use_tiebreak:
-            import ghostaudit.residual as residual
-            original = residual.STATUS_RESULT
-            residual.STATUS_RESULT = {}
         out = matcher.assign(contexts)
-        if not use_tiebreak:
-            residual.STATUS_RESULT = original
         for c in contexts:
             if c.request.case_id in saved:
                 c.direct = saved[c.request.case_id]
@@ -82,12 +88,124 @@ def render(result: dict, title: str) -> str:
     return "\n".join(L)
 
 
-if __name__ == "__main__":
+# ----------------------------------------------------------------------------------------------- analytics
+def _golden_analytics(path: Path) -> dict:
+    gold = load_answers(path)
+    return {cid: {st["resource_id"] for st in steps if st["resource_id"].startswith("analytics_")}
+            for cid, (_status, steps) in gold.items()}
+
+
+def cadence_hide_population(ds: Dataset) -> tuple:
+    """Hiding evidence links needs a case whose compliant, identifier-free profile evidence links. Count them."""
+    resolver = IdentityResolver(ds.identities, ds.audit_log)
+    base = run(ds, ds.all_requests, PlanOptions())
+    n = 0
+    for r in ds.all_requests:
+        if base.intents[r.case_id][0] != DELETE:
+            continue
+        c = build_context(base.index, resolver, r)
+        decs = decisions_for(base.index, c, base.assignments[r.case_id].resource_id)
+        n += any(d.rtype == m.ANALYTICS and not d.violating for d in decs)
+    return n, len(base.analytics)
+
+
+def cadence_sample_backtest(ds: Dataset, policy: str = "hybrid") -> dict:
+    """Truth = the analytics profile in the golden answer of the COMPLETE sample cases (the only compliant profiles whose
+    owner is known). Per case: candidates before cadence, how it was decided, right or wrong, with cadence on and off."""
+    gold = _golden_analytics(DATASET_DIR / "sample_output.csv")
+    out = {}
+    for flag in (True, False):
+        res = run(ds, ds.all_requests, PlanOptions(ambiguity=policy, use_cadence=flag))
+        rows = []
+        for cid, rids in sorted(gold.items()):
+            a = res.analytics.get(cid)
+            if not rids or a is None:                          # INCOMPLETE cases list the exposed profile; not this matcher
+                continue
+            before, after = res.analytics_trace.get(cid, (0, 0))
+            rows.append((cid, before, after, a.how, a.resource_id in rids))
+        out[flag] = {"rows": rows, "guesses_all": sum(1 for a in res.analytics.values() if a.how == "guess"),
+                     "uses": len(res.cadence_uses), "gaps": sorted(res.cadence)}
+    return out
+
+
+def cadence_premise(ds: Dataset) -> dict:
+    """Does the worker really space a case's resources by a fixed alternating gap? Checked on evidence-linked resources
+    only: gaps between consecutive linked resources' worker events, and the gap before an evidence-linked analytics profile."""
+    res = run(ds, ds.all_requests, PlanOptions())
+    ev = defaultdict(list)
+    for r in ds.activity:
+        if r["source_system"] == "deletion_worker":
+            ev[r["resource_id"]].append(r["event_time"])
+    reqs = {r.case_id: r for r in ds.all_requests}
+    pair_gaps, analytics_gaps = Counter(), Counter()
+    for cid, result in res.results.items():
+        rep = reqs[cid].reported_at
+        items = []
+        for d in result.decisions:
+            if d.resource_id.startswith("account_") or d.resource_id not in ev:
+                continue
+            t = min(ev[d.resource_id], key=lambda x: abs(parse(x) - parse(rep)))
+            if abs((parse(t) - parse(rep)).total_seconds()) <= 7200:
+                items.append((t, d.resource_id))
+        items.sort()
+        for (t0, _r0), (t1, r1) in zip(items, items[1:]):
+            gap = int((parse(t1) - parse(t0)).total_seconds())
+            pair_gaps[gap] += 1
+            if r1.startswith("analytics_"):
+                analytics_gaps[gap] += 1
+    return {"pairs": pair_gaps, "analytics": analytics_gaps}
+
+
+def render_cadence(ds: Dataset) -> str:
+    n_hide, n_matched = cadence_hide_population(ds)
+    L = ["### Cadence heuristic: what can be backtested", "",
+         f"- Hiding evidence links (as for accounts) is **not possible**: {n_hide} cases have a compliant, identifier-free "
+         "analytics profile that evidence links to them. An anonymized profile carries no identifier, so evidence never "
+         f"links it; that is why the matcher exists ({n_matched} cases are matched by it).",
+         "- The only ground truth for these profiles is the golden answers of the COMPLETE sample cases, reported below. "
+         "It is a small sample, so read the accuracy as 'no failure observed', not as a rate.", ""]
+    for pol in ("hybrid", "guess"):
+        bt = cadence_sample_backtest(ds, pol)
+        L += [f"#### Sample truth, policy {pol}", "",
+              "| candidates before cadence | cadence | cases | right | decided by |", "|---|---|---|---|---|"]
+        for flag in (True, False):
+            rows = bt[flag]["rows"]
+            for k in sorted({r[1] for r in rows}):
+                sel = [r for r in rows if r[1] == k]
+                how = Counter(r[3] for r in sel)
+                L.append(f"| {k} | {'on' if flag else 'off'} | {len(sel)} | {sum(r[4] for r in sel)} | "
+                         f"{', '.join(f'{v} {h}' for h, v in sorted(how.items()))} |")
+        L += ["", f"Whole dataset (samples + eval): analytics guesses with cadence on {bt[True]['guesses_all']}, "
+                  f"off {bt[False]['guesses_all']}; cadence narrowed {bt[True]['uses']} cases; learned gaps {bt[True]['gaps']}.", ""]
+    prem = cadence_premise(ds)
+    top = prem["pairs"].most_common(5)
+    tot = sum(prem["pairs"].values())
+    top4 = sum(v for _g, v in prem["pairs"].most_common(4))
+    ana = prem["analytics"]
+    L += ["#### Premise check on evidence-linked resources (no hidden links, no analytics guessing)", "",
+          f"- Consecutive worker events of a case's linked resources: {tot} pairs; the four most common gaps "
+          f"{[g for g, _v in prem['pairs'].most_common(4)]} s cover {top4} of them (top five with counts: {top}).",
+          f"- Evidence-linked analytics profiles with a linked predecessor: {sum(ana.values())}; gap distribution "
+          f"{ana.most_common(5)}. These profiles sit in the same alternating-gap pattern, which is the premise the "
+          "cadence heuristic relies on.", ""]
+    return "\n".join(L)
+
+
+def main() -> None:
     ds = Dataset()
-    print(render(backtest(ds, True), "with the status/worker-result tiebreak, policy guess"))
-    print()
-    print(render(backtest(ds, False), "without the tiebreak, policy guess"))
-    print()
-    print(render(backtest(ds, True, "hybrid"), "with the tiebreak, policy hybrid (guess only with <= 2 candidates)"))
-    print()
-    print(render(backtest(ds, True, "omit"), "with the tiebreak, policy omit"))
+    parts = ["# Residual identity backtests (generated by `python3 code/evaluation/identity_backtest.py`)", "",
+             "Evidence-established links are hidden and recovered from the activity stream alone. No golden answer is used.", "",
+             "## Accounts", "",
+             render(backtest(ds, True), "with the status/worker-result tiebreak, policy guess"), "",
+             render(backtest(ds, False), "without the tiebreak, policy guess"), "",
+             render(backtest(ds, True, "hybrid"), "with the tiebreak, policy hybrid (guess only with <= 2 candidates)"), "",
+             render(backtest(ds, True, "omit"), "with the tiebreak, policy omit"), "",
+             "## Anonymized analytics profiles (worker-cadence heuristic)", "",
+             render_cadence(ds), ""]
+    text = "\n".join(parts)
+    print(text)
+    (Path(__file__).resolve().parent / "residual_backtest.md").write_text(text + "\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()

@@ -25,9 +25,14 @@ def main(argv=None) -> int:
     ap.add_argument("--report", type=Path, default=CODE_DIR / "evaluation" / "run_report.md")
     ap.add_argument("--ambiguity", choices=("guess", "omit", "hybrid"), default="hybrid",
                     help="what to do when an account stays ambiguous after evidence, elimination and tiebreak")
+    ap.add_argument("--no-cadence", action="store_true",
+                    help="do not use the learned worker cadence to link anonymized analytics profiles")
+    ap.add_argument("--no-tiebreak", action="store_true",
+                    help="do not use the reported_status <-> worker-result tiebreak for unresolved accounts")
     args = ap.parse_args(argv)
     ds = Dataset(args.dataset)
-    res = run(ds, ds.requests, PlanOptions(ambiguity=args.ambiguity))
+    res = run(ds, ds.requests, PlanOptions(ambiguity=args.ambiguity, use_cadence=not args.no_cadence,
+                                       use_tiebreak=not args.no_tiebreak))
     write_output(args.out, res.results)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(run_report(res), encoding="utf-8")

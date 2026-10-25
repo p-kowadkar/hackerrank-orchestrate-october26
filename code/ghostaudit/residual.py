@@ -50,10 +50,12 @@ class TiebreakUse:
 
 
 class AccountMatcher:
-    def __init__(self, activity: list, index: EvidenceIndex, resolver: IdentityResolver, ambiguity: str = "guess"):
+    def __init__(self, activity: list, index: EvidenceIndex, resolver: IdentityResolver, ambiguity: str = "guess",
+                 use_tiebreak: bool = True):
         self.index = index
         self.resolver = resolver
         self.ambiguity = ambiguity
+        self.use_tiebreak = use_tiebreak
         self.events = {}                        # rid -> list of (time, result)
         flat = []
         for r in activity:
@@ -113,7 +115,7 @@ class AccountMatcher:
                 pools[ctx.request.case_id] = self._pool(ctx)
         by_id = {c.request.case_id: c for c in contexts}
         self._eliminate(pools, taken, out)                                # 2. elimination
-        progress = True
+        progress = self.use_tiebreak
         while progress:                                                   # 3. last-resort tiebreak
             progress = False
             for cid in sorted(pools, key=lambda c: by_id[c].request.number):
@@ -233,6 +235,7 @@ class AnalyticsMatcher:
             if r["event_type"] == "ANONYMIZE_RECORD" and r["reported_result"] == "SUCCESS":
                 self.events.setdefault(r["resource_id"], []).append(r["event_time"])
         self.cadence_uses: list = []
+        self.pool_trace: dict = {}                     # case_id -> (candidates before cadence, candidates after cadence)
 
     def _pool(self, ctx) -> list:
         out = []
@@ -245,11 +248,14 @@ class AnalyticsMatcher:
                     break
         return [rid for _t, rid in sorted(out)]
 
-    def assign(self, contexts: list, has_analytics: set, sibling_times: dict) -> dict:
-        """-> case_id -> AccountAssignment-like (resource_id, how, candidates). `has_analytics`: cases that need no id-less analytics (INCOMPLETE, or already linked)."""
+    def assign(self, contexts: list, has_analytics: set, sibling_times: dict, linked_elsewhere: frozenset = frozenset()) -> dict:
+        """-> case_id -> AccountAssignment-like (resource_id, how, candidates). `has_analytics`: cases that need no
+        id-less analytics (INCOMPLETE, or already linked). `linked_elsewhere`: profiles evidence ties to some case."""
         from .timeutil import parse
-        pools = {c.request.case_id: self._pool(c) for c in contexts if c.request.case_id not in has_analytics}
+        pools = {c.request.case_id: [r for r in self._pool(c) if r not in linked_elsewhere]
+                 for c in contexts if c.request.case_id not in has_analytics}
         pools = {cid: p for cid, p in pools.items() if p}
+        self.pool_trace = {cid: (len(p), len(p)) for cid, p in pools.items()}
         out, taken = {}, set()
         # (b) cadence: the event must sit exactly one/two/three cadence steps before the first sibling event
         for cid in sorted(pools, key=lambda c: int(c.split("_")[1])):
@@ -262,6 +268,7 @@ class AnalyticsMatcher:
             if 0 < len(ok) < len(pools[cid]):
                 self.cadence_uses.append(CadenceUse(cid, tuple(pools[cid]), tuple(ok)))
                 pools[cid] = ok
+                self.pool_trace[cid] = (self.pool_trace[cid][0], len(ok))
         # elimination of unique, unconflicted candidates
         while True:
             singles = {}

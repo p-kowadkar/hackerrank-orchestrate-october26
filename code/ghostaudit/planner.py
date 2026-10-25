@@ -32,6 +32,7 @@ class PlanOptions:
     verify_compliant_in_incomplete: bool = False        # list already-compliant resources in INCOMPLETE cases?
     verify_absent_nonaccount: bool = False              # list ABSENT search/export/... resources in COMPLETE cases?
     use_cadence: bool = True                            # link id-less analytics through the learned worker cadence
+    use_tiebreak: bool = True                           # last-resort reported_status <-> worker-result tiebreak (accounts)
 
 
 def build_context(index, resolver, request: Request) -> CaseContext:
