@@ -70,6 +70,8 @@ class Scorecard:
     field_hits: Counter = field(default_factory=Counter)
     field_total: Counter = field(default_factory=Counter)
     exact_cases: int = 0
+    pos_hits: int = 0           # golden steps whose position holds an identical predicted step
+    pos_total: int = 0
     lcs_sum: float = 0.0
     discrepancies: list = field(default_factory=list)
     exact_case_ids: list = field(default_factory=list)
@@ -135,6 +137,9 @@ def score(pred: dict, gold: dict, classify=None) -> Scorecard:
         for ps in p_steps:
             if _key(ps) not in g_key:
                 sc.discrepancies.append(Discrepancy(cid, "EXTRA", _fmt(ps)))
+        # positional accuracy: step i of the prediction equals step i of the golden answer (all seven fields)
+        sc.pos_total += len(g_steps)
+        sc.pos_hits += sum(1 for gs, ps in zip(g_steps, p_steps) if _norm(gs) == _norm(ps))
         # sequence accuracy
         g_seq, p_seq = [_key(s) for s in g_steps], [_key(s) for s in p_steps]
         denom = max(len(g_seq), len(p_seq))
@@ -207,7 +212,8 @@ def render_scorecard(sc: Scorecard, title: str, tag_counts: Counter | None = Non
          f"| step-level exact match: precision / recall / F1 | {p:.3f} / {r:.3f} / {f:.3f} (tp {sc.tp}, fp {sc.fp}, fn {sc.fn}) |",
          f"| step identification (phase, system, resource, operation): P / R / F1 | {kp:.3f} / {kr:.3f} / {kf:.3f} |",
          f"| cases reproduced exactly (status and every step, order and step_no) | {sc.exact_cases}/{sc.n_cases} = {sc.exact_cases / max(sc.n_cases, 1):.1%} |",
-         f"| mean sequence overlap (LCS of step keys / longer sequence) | {sc.lcs_sum / max(sc.n_cases, 1):.3f} |", ""]
+         f"| mean sequence overlap (LCS of step keys / longer sequence) | {sc.lcs_sum / max(sc.n_cases, 1):.3f} |",
+         f"| positional match (step i equals golden step i, all seven fields) | {sc.pos_hits}/{sc.pos_total} = {sc.pos_hits / max(sc.pos_total, 1):.1%} |", ""]
     L += ["Field-level accuracy over golden steps (aligned by phase, system, resource, operation):", "",
           "| field | correct |", "|---|---|"]
     for f_ in ALL_FIELDS:

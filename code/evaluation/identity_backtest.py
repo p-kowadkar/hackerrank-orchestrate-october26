@@ -30,7 +30,7 @@ from ghostaudit.identity import IdentityResolver            # noqa: E402
 from ghostaudit.intent import DELETE, classify_text         # noqa: E402
 from ghostaudit import model as m                           # noqa: E402
 from ghostaudit.pipeline import run                         # noqa: E402
-from ghostaudit.planner import PlanOptions, build_context, decisions_for  # noqa: E402
+from ghostaudit.planner import PlanOptions, build_context, decisions_for, plan_case  # noqa: E402
 from ghostaudit.residual import AccountMatcher              # noqa: E402
 
 
@@ -85,6 +85,74 @@ def render(result: dict, title: str) -> str:
         good, bad = stats[("cohort", size, True)], stats[("cohort", size, False)]
         if good + bad:
             L.append(f"| {size}{'+' if size == 3 else ''} | {good + bad} | {good} ({good / (good + bad):.0%}) |")
+    return "\n".join(L)
+
+
+# ---------------------------------------------------------------------------- policy value, same scorer as the samples
+def policy_value(ds: Dataset | None = None, policies=("omit", "hybrid", "guess")) -> dict:
+    """What does each ambiguity policy cost or gain under the scorer's own definitions?
+
+    The 255 cases whose account evidence establishes get a pseudo-golden answer: the plan built with the true account.
+    The account link is then hidden (cohort by cohort), the case is re-planned under each policy, and the result is
+    scored with `score.score`, the same function that scores the 32 samples. Only the account step can differ, so the
+    numbers isolate exactly what the policy decides. The pseudo-golden is our own plan, not an organizer answer.
+    """
+    from score import score
+    ds = ds or Dataset()
+    resolver = IdentityResolver(ds.identities, ds.audit_log)
+    base = run(ds, ds.all_requests, PlanOptions())
+    index = base.index
+    contexts = [build_context(index, resolver, r) for r in ds.all_requests if base.intents[r.case_id][0] == DELETE]
+    truth, still_present = {}, 0
+    for c in contexts:
+        direct = sorted(r for r in c.direct if r.startswith("account_"))
+        if len(direct) != 1:
+            continue
+        acct = [d for d in base.results[c.request.case_id].decisions if d.resource_id == direct[0]]
+        if acct and acct[0].violating:          # a residual account is never observed, so it is never a present one
+            still_present += 1
+            continue
+        truth[c.request.case_id] = direct[0]
+    cohorts = defaultdict(list)
+    for c in contexts:
+        if c.request.case_id in truth:
+            cohorts[c.request.reported_at].append(c)
+    gold = {cid: (base.results[cid].status, base.results[cid].steps) for cid in truth}
+    cards = {}
+    for pol in policies:
+        pred = {}
+        for _time, group in cohorts.items():
+            saved = {c.request.case_id: dict(c.direct) for c in group}
+            for c in group:
+                c.direct = {k: v for k, v in c.direct.items() if not k.startswith("account_")}
+            matcher = AccountMatcher(ds.activity, index, resolver, pol)
+            for c in group:
+                matcher.owners.pop(truth[c.request.case_id], None)
+            out = matcher.assign(contexts)
+            for c in group:
+                cid = c.request.case_id
+                a = base.analytics.get(cid)
+                extra = [a.resource_id] if a and a.resource_id else []
+                r = plan_case(index, c, out[cid].resource_id, PlanOptions(ambiguity=pol), extra)
+                pred[cid] = (r.status, r.steps)
+            for c in group:
+                c.direct = saved[c.request.case_id]
+        cards[pol] = score(pred, gold)
+    return {"cards": cards, "n": len(truth), "still_present": still_present}
+
+
+def render_policy_value(result: dict) -> str:
+    L = [f"Pseudo-golden = our own plan with the true account, {result['n']} evidence-established cases whose account is "
+         f"verified absent ({result['still_present']} more are left out because the account is still present: a residual, "
+         "unobserved account is never one), scored with `score.score` (the sample scorer). Only the account step can differ.", "",
+         "| policy | status acc | step P / R / F1 | field step_no | field resource_id | seq overlap | positional | exact cases |",
+         "|---|---|---|---|---|---|---|---|"]
+    for pol, sc in result["cards"].items():
+        p, r, f = sc.step_prf()
+        fld = lambda k: f"{sc.field_hits[k] / max(sc.field_total[k], 1):.3f}"   # noqa: E731
+        L.append(f"| {pol} | {sc.status_correct}/{sc.n_cases} | {p:.3f} / {r:.3f} / {f:.4f} | {fld('step_no')} | "
+                 f"{fld('resource_id')} | {sc.lcs_sum / max(sc.n_cases, 1):.3f} | {sc.pos_hits / max(sc.pos_total, 1):.3f} | "
+                 f"{sc.exact_cases}/{sc.n_cases} |")
     return "\n".join(L)
 
 
@@ -200,6 +268,7 @@ def main() -> None:
              render(backtest(ds, False), "without the tiebreak, policy guess"), "",
              render(backtest(ds, True, "hybrid"), "with the tiebreak, policy hybrid (guess only with <= 2 candidates)"), "",
              render(backtest(ds, True, "omit"), "with the tiebreak, policy omit"), "",
+             "### Policy value under the sample scorer", "", render_policy_value(policy_value(ds)), "",
              "## Anonymized analytics profiles (worker-cadence heuristic)", "",
              render_cadence(ds), ""]
     text = "\n".join(parts)

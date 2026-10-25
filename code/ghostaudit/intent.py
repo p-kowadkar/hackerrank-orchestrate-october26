@@ -34,12 +34,23 @@ _NEG_PHRASES = (
 )
 # a removal that only concerns marketing is an opt-out, not a deletion request
 _OPT_OUT = re.compile(r"\b(?:marketing|promotional|promotions|newsletter|newsletters|mailing list|mailing lists|"
-                      r"advertis\w*|unsubscribe)\b", re.I)
+                      r"advertis\w*|unsubscribe|bolet[ií]n|promocion\w*|publicidad|publicit\w*|promotionnel\w*|"
+                      r"werbung|werbe\w*|propaganda|promo[cç][oõ]es)\b", re.I)
 # explicit non-deletion actions (used only to label NON_DELETE when there is no affirmative deletion request)
 _NON_DEL_ACTION = re.compile(
     r"\b(?:update|replace|change|correct|fix|misspell\w*|reset\w*|copy|download\w*|export|portable|access|"
     r"what personal information|information request|invoices?|opt[- ]?out|stop the|unsubscribe|out of date)\b", re.I)
-_AFFIRM_KEEP = re.compile(r"\b(?:keep|leave|retain|continue using|still (?:need|use|want))\b", re.I)
+# the same actions in the other request languages seen in the data (es, fr) and the likely ones (pt, de)
+_NON_DEL_OTHER = re.compile(
+    r"\b(?:copia (?:de )?(?:todos )?(?:mis|los|sus) datos|enviar(?:me|nos)? (?:una )?copia|acceder a (?:mis|los) datos|"
+    r"acceso a (?:mis|los) datos|corregir|actualizar|cambiar (?:mi|el) \w+|descargar|exportar|dejar de recibir|darme de baja|"
+    r"copie de (?:toutes )?(?:mes|les) donn[ée]es|envoyer(?:-moi)? une copie|acc[ée]der [àa] mes donn[ée]es|"
+    r"droit d'acc[èe]s|corriger|rectifier|mettre [àa] jour|modifier (?:mon|ma|mes)|t[ée]l[ée]charger|exporter|ne plus recevoir|"
+    r"me d[ée]sabonner|d[ée]sinscri\w*|c[óo]pia (?:de |dos )?(?:todos )?(?:os )?(?:meus )?dados|enviar uma c[óo]pia|"
+    r"acessar|acesso aos meus|atualizar|alterar|baixar|parar de receber|kopie meiner daten|auskunft|korrigier\w*|"
+    r"aktualisier\w*|[äa]ndern|herunterlad\w*|exportier\w*|abmelden)\b", re.I)
+_AFFIRM_KEEP = re.compile(r"\b(?:keep|leave|retain|continue using|still (?:need|use|want)|conservar|mantener|garder|conserver|"
+                          r"manter|behalten)\b", re.I)
 
 
 @dataclass(frozen=True)
@@ -88,6 +99,6 @@ def classify_text(request_text: str) -> Intent:
         return Intent(DELETE, "affirmative deletion request")
     if negated or opt_out:
         return Intent(NON_DELETE, "deletion explicitly negated or limited to marketing opt-out")
-    if _NON_DEL_ACTION.search(text) or _AFFIRM_KEEP.search(text):
+    if _NON_DEL_ACTION.search(text) or _NON_DEL_OTHER.search(text) or _AFFIRM_KEEP.search(text):
         return Intent(NON_DELETE, "non-deletion action requested")
     return Intent(UNCLEAR, "no recognised deletion or non-deletion cue")

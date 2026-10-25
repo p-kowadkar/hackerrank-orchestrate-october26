@@ -14,6 +14,7 @@ Cases: 32
 | step identification (phase, system, resource, operation): P / R / F1 | 1.000 / 0.979 / 0.990 |
 | cases reproduced exactly (status and every step, order and step_no) | 28/32 = 87.5% |
 | mean sequence overlap (LCS of step keys / longer sequence) | 0.974 |
+| positional match (step i equals golden step i, all seven fields) | 181/193 = 93.8% |
 
 Field-level accuracy over golden steps (aligned by phase, system, resource, operation):
 

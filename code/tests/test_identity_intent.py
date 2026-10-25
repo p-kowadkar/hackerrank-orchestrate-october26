@@ -49,6 +49,24 @@ class IntentTests(unittest.TestCase):
         for text, want in cases.items():
             self.assertEqual(classify_text(text).label, want, text)
 
+    def test_non_english_requests_in_both_directions(self):
+        """Languages seen in the data (es, fr) and likely ones (pt, de): deletion stays deletion, access/opt-out is not."""
+        cases = {
+            "Hola, ¿podrían enviarme una copia de todos los datos personales que tienen sobre mí?": NON_DELETE,
+            "Quiero dejar de recibir correos de publicidad, pero conservar mi cuenta.": NON_DELETE,
+            "Por favor, eliminen mi cuenta y todos mis datos.": DELETE,
+            "Bonjour, pouvez-vous m'envoyer une copie de mes données personnelles ?": NON_DELETE,
+            "Je souhaite corriger mon adresse e-mail dans mon profil.": NON_DELETE,
+            "Veuillez supprimer mon compte et mes données.": DELETE,
+            "Gostaria de receber uma cópia dos meus dados.": NON_DELETE,
+            "Por favor, apague a minha conta.": DELETE,
+            "Bitte schicken Sie mir eine Kopie meiner Daten und aktualisieren Sie meine Adresse.": NON_DELETE,
+            "Bitte löschen Sie mein Konto und meine Daten.": DELETE,
+            "Quiero una copia de mis datos y que eliminen mi cuenta después.": DELETE,
+        }
+        for text, want in cases.items():
+            self.assertEqual(classify_text(text).label, want, text)
+
     def test_classify_events_map_to_exactly_the_non_deletion_cases(self):
         ds = dataset()
         events = [a for a in ds.activity if a["event_type"] == "CLASSIFY_REQUEST"]

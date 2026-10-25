@@ -49,37 +49,43 @@ def kvparse(s: str) -> dict:
 
 
 def parse_line(line: str):
-    """-> dict(ts, event, trace, kv) or None for lines that are not log records."""
+    """-> dict(ts, event, trace, kv, dialect, raw) or None for lines that are not log records.
+    dialect is one of json, pipe, bracket, syslog, cloud (requestId + nested message), kv."""
     mt = TS_RE.match(line)
     if not mt:
         return None
     ts, rest = mt.groups()
-    trace, event, kv = None, None, {}
+    trace, event, kv, dialect = None, None, {}, "kv"
     if rest.startswith("{"):
+        dialect = "json"
         try:
             kv = {k: ("null" if v is None else str(v)) for k, v in json.loads(rest).items()}
         except ValueError:
             return None
         event, trace = kv.get("event"), kv.get("trace_id")
     elif PIPE_RE.match(rest):
+        dialect = "pipe"
         _lvl, _svc, trace, event, tail = PIPE_RE.match(rest).groups()
         kv = kvparse(tail)
     elif BRACKET_RE.match(rest):
+        dialect = "bracket"
         _lvl, _svc, trace, event, tail = BRACKET_RE.match(rest).groups()
         kv = kvparse(tail)
     elif SYSLOG_RE.match(rest):
+        dialect = "syslog"
         _host, _svc, trace, tail = SYSLOG_RE.match(rest).groups()
         kv = kvparse(tail)
         event = kv.get("event")
     else:
         kv = kvparse(rest)
         if "message" in kv:                                  # requestId/message dialect with escaped nested pairs
+            dialect = "cloud"
             kv.update(kvparse(kv["message"]))
         event = kv.get("event")
         trace = kv.get("trace_id") or kv.get("requestId")
     if not event:
         return None
-    return {"ts": ts, "event": event, "trace": trace or kv.get("trace_id"), "kv": kv, "raw": line}
+    return {"ts": ts, "event": event, "trace": trace or kv.get("trace_id"), "kv": kv, "dialect": dialect, "raw": line}
 
 
 def _t(v) -> bool:
