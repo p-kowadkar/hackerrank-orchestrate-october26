@@ -54,16 +54,22 @@ def latest_observation(index: EvidenceIndex, resource_id: str, audit_at: str):
 
 def directly_linked(index: EvidenceIndex, tokens: frozenset, user_id: str, audit_at: str) -> dict:
     """resource_id -> set of linking file ids, for resources whose records carry one of the user's tokens
-    in a file captured inside the case window, plus the data catalog's LINK facts."""
+    in a file captured inside the case window, plus the data catalog's LINK facts that fall inside it.
+
+    Identity only. One exception is wider on purpose: a user has at most one audit record (checked over all 457 users that
+    have one), so an audit record is attributed to the user whatever the capture date of the file that names it. The
+    state of any resource, audit records included, still comes only from evidence captured on or before audit_at."""
     lo = shift(audit_at, days=-WINDOW_BEFORE_DAYS)
     hi = shift(audit_at, days=WINDOW_AFTER_DAYS)
     found: dict = {}
     for tok in tokens:
         for o in index.by_token.get(tok, ()):
-            if lo <= o.captured_at <= hi and not o.resource_id.startswith(IGNORED_TYPES):
+            if o.resource_id.startswith(IGNORED_TYPES):
+                continue
+            if lo <= o.captured_at <= hi or o.rtype == m.AUDIT:
                 found.setdefault(o.resource_id, set()).add(o.file_id)
     for lk in index.links:
-        if lk.user_id == user_id and lk.time <= audit_at:
+        if lk.user_id == user_id and (lo <= lk.time <= audit_at):
             found.setdefault(lk.resource_id, set()).add(lk.file_id or "LINK")
     return found
 

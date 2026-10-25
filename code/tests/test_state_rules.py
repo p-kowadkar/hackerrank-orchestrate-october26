@@ -94,5 +94,58 @@ class TiebreakConfinementTests(unittest.TestCase):
         self.assertEqual(len(rids), len(set(rids)))
 
 
+class AuditWindowTests(unittest.TestCase):
+    """The audit-record identity window is wider than the case window; state rules are untouched."""
+
+    @classmethod
+    def setUpClass(cls):
+        from collections import defaultdict
+        from .support import index, resolver
+        cls.per_user = defaultdict(set)
+        res = resolver()
+        for o in index().obs:
+            if o.rtype == m.AUDIT:
+                for t in o.tokens:
+                    users = res.token_users.get(t, ())
+                    if len(users) == 1:
+                        cls.per_user[next(iter(users))].add(o.resource_id)
+        for lk in index().links:
+            if lk.resource_id.startswith("audit_record"):
+                cls.per_user[lk.user_id].add(lk.resource_id)
+
+    def test_a_user_has_at_most_one_audit_record_in_all_the_evidence(self):
+        self.assertGreater(len(self.per_user), 400)
+        self.assertEqual(max(len(v) for v in self.per_user.values()), 1)
+
+    def test_samples_neither_need_nor_contradict_the_wider_window(self):
+        """Unlimited-window attribution equals the golden audit set for every sample, except the two ids no file contains."""
+        import json, csv
+        from .support import resolver
+        from ghostaudit.paths import DATASET_DIR
+        gold = {r["case_id"]: {s["resource_id"] for s in json.loads(r["steps_json"]) if s["resource_id"].startswith("audit_record")}
+                for r in csv.DictReader(open(DATASET_DIR / "sample_output.csv", encoding="utf-8"))}
+        differs = []
+        for r in dataset().sample_requests:
+            uid, _ = resolver().resolve(r.email)
+            if self.per_user.get(uid, set()) != gold[r.case_id]:
+                differs.append(r.case_id)
+        self.assertEqual(sorted(differs), ["case_18", "case_20"])
+
+    def test_late_audit_record_is_attributed_but_never_gives_state(self):
+        run = pipeline_run()
+        d = next(x for x in run.results["case_33"].decisions if x.resource_id == "audit_record_8486")
+        self.assertIsNone(d.obs)                       # no admissible observation: state defaulted, not read from late evidence
+        self.assertTrue(d.defaulted)
+        step = next(s for s in run.results["case_33"].steps if s["resource_id"] == "audit_record_8486")
+        self.assertEqual((step["operation"], step["evidence_id"]), ("VERIFY_RECORD_PRESENT", ""))
+
+    def test_complete_answer_never_lists_an_uncitable_audit_step(self):
+        run = pipeline_run()
+        for cid, r in run.results.items():
+            if r.status == "COMPLETE":
+                for s in r.steps:
+                    self.assertTrue(s["evidence_id"], (cid, s))
+
+
 if __name__ == "__main__":
     unittest.main()

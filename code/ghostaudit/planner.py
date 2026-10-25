@@ -84,6 +84,8 @@ def plan_case(index, ctx: CaseContext, account_rid, options: PlanOptions, extra_
                 ev = d.obs.file_id if d.obs else (absence_proof(index, "account_service", audit_at) or "")
             verification.append(_step("VERIFY_RECORD_ABSENT", d, ev))
         elif d.rtype in (m.AUDIT, m.LEGAL_HOLD):
+            if status == "COMPLETE" and d.obs is None:
+                continue          # known from late evidence only: a COMPLETE answer may list only citable verification steps
             ev = d.obs.file_id if (d.obs and status == "COMPLETE") else ""
             verification.append(_step("VERIFY_RECORD_PRESENT", d, ev))
         elif status == "COMPLETE" or options.verify_compliant_in_incomplete:

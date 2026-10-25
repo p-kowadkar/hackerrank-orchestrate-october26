@@ -48,7 +48,7 @@ def collect() -> dict:
 
 
 def results_table(c: dict) -> str:
-    sc, cs, full = c["sc"], c["custom"]["score"], c["full"]
+    sc, full = c["sc"], c["full"]
     tb_s = [u for u in full.tiebreak_uses if u.case_id in c["sample_ids"]]
     tb_e = [u for u in full.tiebreak_uses if u.case_id in c["eval_ids"]]
     cd_s = [u for u in full.cadence_uses if u.case_id in c["sample_ids"]]
@@ -56,24 +56,30 @@ def results_table(c: dict) -> str:
     ev = [full.results[i] for i in c["eval_ids"]]
     st = Counter(r.status for r in ev)
     p, r, f = sc.step_prf()
-    cp, cr, cf = cs.step_prf()
     unv = c["unverified"]
-    L = ["| scope | cases | status accuracy | step P / R / F1 | exact cases | tiebreak uses (narrowed to one) | cadence uses (narrowed to one) |",
+    L = ["Only the 32 golden samples carry accuracy figures. The second row is a count of how often the two dataset-specific "
+         "heuristics were used, not an accuracy.", "",
+         "| scope | cases | status accuracy | step P / R / F1 | exact cases | tiebreak uses (narrowed to one) | cadence uses (narrowed to one) |",
          "|---|---|---|---|---|---|---|",
          f"| 32 public samples (headline, golden answers) | {sc.n_cases} | {sc.status_correct}/{sc.n_cases} | {p:.3f} / {r:.3f} / {f:.3f} | "
          f"{sc.exact_cases}/{sc.n_cases} | {len(tb_s)} ({sum(u.resolved for u in tb_s)}) | {len(cd_s)} ({sum(len(u.after) == 1 for u in cd_s)}) |",
-         f"| {cs.n_cases} hand-built evaluation cases (hand-derived answers) | {cs.n_cases} | {cs.status_correct}/{cs.n_cases} | "
-         f"{cp:.3f} / {cr:.3f} / {cf:.3f} | {cs.exact_cases}/{cs.n_cases} | 0 (0) | 0 (0) |",
-         f"| 518 evaluation requests (no golden answer; counts only) | {len(ev)} | n/a | n/a | n/a | {len(tb_e)} ({sum(u.resolved for u in tb_e)}) | "
+         f"| 518 evaluation requests (no golden answer; usage counts only) | {len(ev)} | n/a | n/a | n/a | {len(tb_e)} ({sum(u.resolved for u in tb_e)}) | "
          f"{len(cd_e)} ({sum(len(u.after) == 1 for u in cd_e)}) |", ""]
     L += [f"Verdicts on the 518 evaluation requests: COMPLETE {st['COMPLETE']}, INCOMPLETE {st['INCOMPLETE']}, "
           f"NOT_APPLICABLE {st['NOT_APPLICABLE']}.", ""]
     if unv:
         ok = sum(u["status_ok"] for u in unv)
-        L += [f"Not in the table, because they are unverified: the 12 hand-derived image/PDF expectations "
+        L += [f"Not accuracy either, because they are unverified: the 12 hand-derived image/PDF expectations "
               f"(`derived_cases.md`). Status matches {ok}/{len(unv)}; required steps found "
-              f"{sum(u['found'] for u in unv)}/{sum(u['required'] for u in unv)}. The screenshot reader is not built yet.", ""]
+              f"{sum(u['found'] for u in unv)}/{sum(u['required'] for u in unv)}.", ""]
     return "\n".join(L)
+
+
+def synthetic_block(c: dict) -> str:
+    cs = c["custom"]["score"]
+    ok = sum(1 for cid, (status, steps) in c["custom"]["world"].expected.items() if c["custom"]["pred"][cid] == (status, steps))
+    return (f"| synthetic worlds | cases | reproduce their hand-derived answer exactly |\n|---|---|---|\n"
+            f"| `custom_cases.py` | {cs.n_cases} | {ok}/{cs.n_cases} |\n")
 
 
 def scorecard_block(c: dict) -> str:
@@ -120,7 +126,7 @@ def switches_block(c: dict) -> str:
     return "\n".join(L)
 
 
-BLOCKS = {"results": results_table, "scorecard": scorecard_block, "residual": residual_block, "policy": policy_block,
+BLOCKS = {"results": results_table, "synthetic": synthetic_block, "scorecard": scorecard_block, "residual": residual_block, "policy": policy_block,
           "switches": switches_block}
 
 
